@@ -1,0 +1,88 @@
+{
+    "name": "welldigit/etruscan",
+    "description": "Etruscan - Laravel package to project PHP-attribute-annotated classes into a vault of linked markdown notes: a graph-ready map of your codebase.",
+    "keywords": [
+        "welldigit",
+        "laravel",
+        "markdown",
+        "architecture",
+        "documentation",
+        "knowledge-graph",
+        "attributes"
+    ],
+    "type": "library",
+    "homepage": "https://etruscan.dev",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Petro Lashyn",
+            "email": "petro.lashyn@welldigit.com",
+            "role": "Developer"
+        },
+        {
+            "name": "Well Digit",
+            "email": "hello@welldigit.com",
+            "homepage": "https://welldigit.com"
+        }
+    ],
+    "support": {
+        "email": "hello@welldigit.com",
+        "issues": "https://github.com/welldigit/etruscan/issues",
+        "source": "https://github.com/welldigit/etruscan"
+    },
+    "require": {
+        "php": "^8.4",
+        "illuminate/console": "^13.0",
+        "illuminate/support": "^13.0",
+        "nikic/php-parser": "^5.7",
+        "spatie/laravel-package-tools": "^1.16",
+        "symfony/finder": "^7.2|^8.0"
+    },
+    "require-dev": {
+        "larastan/larastan": "^3.0",
+        "laravel/pint": "^1.0",
+        "orchestra/testbench": "^11.0",
+        "pestphp/pest": "^4.0",
+        "rector/rector": "^2.5"
+    },
+    "autoload": {
+        "psr-4": {
+            "WellDigit\\Etruscan\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "WellDigit\\Etruscan\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "vendor/bin/pest",
+        "phpstan": "vendor/bin/phpstan analyse --memory-limit=2G",
+        "pint:fix": "vendor/bin/pint",
+        "pint:dry": "vendor/bin/pint --test",
+        "rector:fix": "vendor/bin/rector process",
+        "rector:dry": "vendor/bin/rector process --dry-run",
+        "vault": "ETRUSCAN_ROOTS=src vendor/bin/testbench etruscan:generate --vault=vault --group-by=context",
+        "vault:graph": "ETRUSCAN_ROOTS=src vendor/bin/testbench etruscan:graph --output=vault/graph.html",
+        "check": [
+            "@rector:dry",
+            "@pint:dry",
+            "@phpstan",
+            "@test"
+        ]
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "WellDigit\\Etruscan\\EtruscanServiceProvider"
+            ]
+        }
+    },
+    "minimum-stability": "stable",
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    }
+}
