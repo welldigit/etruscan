@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-07-18
+
+### Added
+
+- `## Referenced by` on every note: the inbound edges (who references a class), precomputed alongside the outbound `## References`, so dependencies trace in both directions from the note itself.
+- `etruscan:check` artisan command auditing the map for the mistakes annotations invite — duplicate aliases, off-vocabulary axis values (against an optional `vocabulary` config, with fuzzy typo detection for free-form axes), orphan nodes, and broken `[[wikilinks]]` — with an error/warning split and `--strict` for CI.
+- `etruscan-annotate` Boost skill that designs and applies an annotation schema (taxonomy, curation, aliases) to bootstrap a codebase's map — pairing with `etruscan-navigate`, which reads it.
+
+### Changed
+
+- Descriptions reflow-wrap to a readable width (100 columns) as prose — each paragraph packs to even lines with paragraph breaks preserved — so notes stay legible in a plain editor and re-wrap cleanly after a hand-edit; idempotent across regenerations.
+- Packaging: `.gitattributes` export-ignores the vault, tests, and dev configs from the Composer dist, so `composer require` downloads only `src/`, `config/`, `resources/`, and the package metadata.
+
 ## [1.0.0] - 2026-07-17
 
 ### Added
@@ -19,10 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Configurable scan folders and vault path, both resolved consistently against the application root unless already absolute — whether set via config default, a comma-separated `ETRUSCAN_SCANNED_FOLDERS` / `ETRUSCAN_VAULT` env, or the `--vault`/`--output` CLI options.
 - Safe regeneration: only generated blocks are rewritten; manual content survives regeneration and travels with relocated notes; hand-written notes without the generation marker are never touched.
 - Human-owned descriptions: when a class has no docblock summary, the note's `## Description` section belongs to the human — it renders before `## References` and survives regeneration; a docblock, when present, always wins.
-- Descriptions are reflowed and wrapped to a readable width (100 columns) as prose — each paragraph packs to even lines with paragraph breaks preserved — so notes stay legible in a plain editor and re-wrap cleanly after a hand-edit; the wrap is idempotent across regenerations.
 - Orphan handling: notes whose class lost its `#[EtruscanNode]` are deleted only when pristine, otherwise kept and reported (`--purge` overrides), with empty directories pruned.
 - Fail-loud guards: duplicate node aliases, grouping values that cannot become directory names, and custom axes whose key collides with a reserved identity frontmatter key (`alias`, `class`, `fqcn`, `extends`, `source`).
-- `## Referenced by` section on every note: the inbound edges (who references this class), precomputed alongside the outbound `## References`, so dependencies trace in both directions from the note itself.
-- `etruscan:check` artisan command auditing the map for the mistakes annotations invite — duplicate aliases, off-vocabulary axis values (against an optional `vocabulary` config, with fuzzy typo detection for free-form axes), orphan nodes, and broken `[[wikilinks]]` — with an error/warning split and `--strict` for CI.
 - `etruscan:graph` artisan command rendering the node graph as a single self-contained HTML page: force-directed layout, node colors by any axis, search, and a per-node panel with description, metadata, and inbound/outbound references (`--output` overrides the default `{vault}/graph.html`).
-- Laravel Boost integration: two skills and a core guideline for AI code agents — `etruscan-annotate` designs and applies the annotation schema (taxonomy, curation, aliases) to bootstrap the map, and `etruscan-navigate` navigates the resulting vault and jumps from notes to source files.
+- Laravel Boost integration: the `etruscan-navigate` skill and a core guideline that teach AI code agents to navigate the vault and jump from notes to source files.
