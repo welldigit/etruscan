@@ -18,7 +18,9 @@ use WellDigit\Etruscan\Services\CodebaseScanner;
 use WellDigit\Etruscan\Services\NodeGraphBuilder;
 use WellDigit\Etruscan\Services\NotePathResolver;
 use WellDigit\Etruscan\Services\VaultWriter;
+use WellDigit\Etruscan\Utilities\AbsolutePathResolver;
 use WellDigit\Etruscan\Utilities\AxisKeyParser;
+use WellDigit\Etruscan\Utilities\ScannedFolderResolver;
 use WellDigit\Etruscan\Utilities\TargetFolderCounter;
 
 #[Description('Project attributed classes into a markdown vault (one note per node)')]
@@ -37,13 +39,12 @@ final class EtruscanCommand extends Command
         NodeGraphBuilder $nodeGraphBuilder,
         VaultWriter $vaultWriter,
     ): int {
-        /** @var list<string> $roots */
-        $roots = array_values((array) config('etruscan.roots', [base_path('src')]));
+        $scannedFolders = ScannedFolderResolver::resolve(config('etruscan.scanned_folders', ['app', 'src']));
 
         $vaultOption = $this->option('vault');
-        $vaultPath = is_string($vaultOption) && $vaultOption !== ''
-            ? $vaultOption
-            : (string) config('etruscan.vault_path', base_path('vault'));
+        $vaultPath = AbsolutePathResolver::resolve(
+            is_string($vaultOption) && $vaultOption !== '' ? $vaultOption : (string) config('etruscan.vault_path', '.etruscan'),
+        );
 
         $groupByOption = $this->option('group-by');
 
@@ -62,7 +63,7 @@ final class EtruscanCommand extends Command
 
         $this->info('Scanning for attributed classes ...');
 
-        $scannedClasses = $codebaseScanner($roots);
+        $scannedClasses = $codebaseScanner($scannedFolders);
 
         try {
             $notes = $nodeGraphBuilder($scannedClasses);

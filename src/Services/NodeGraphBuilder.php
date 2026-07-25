@@ -26,18 +26,27 @@ final readonly class NodeGraphBuilder
     {
         $aliasByFqcn = $this->mapAliasesByFqcn($scannedClasses);
 
+        $nodes = array_values(array_filter($scannedClasses, static fn (ScannedClass $scannedClass): bool => $scannedClass->isNode()));
+
+        $linksByAlias = [];
+
+        foreach ($nodes as $node) {
+            $linksByAlias[(string) $node->alias] = $this->resolveLinks(aliasByFqcn: $aliasByFqcn, scannedClass: $node);
+        }
+
+        $referencedByAlias = $this->invertLinks($linksByAlias);
+
         $notes = [];
 
-        foreach ($scannedClasses as $scannedClass) {
-            if (! $scannedClass->isNode()) {
-                continue;
-            }
+        foreach ($nodes as $node) {
+            $alias = (string) $node->alias;
 
             $notes[] = new NoteContent(
-                alias: (string) $scannedClass->alias,
-                frontmatter: $this->buildFrontmatter($scannedClass),
-                links: $this->resolveLinks(aliasByFqcn: $aliasByFqcn, scannedClass: $scannedClass),
-                description: $scannedClass->description,
+                alias: $alias,
+                frontmatter: $this->buildFrontmatter($node),
+                links: $linksByAlias[$alias],
+                referencedBy: $referencedByAlias[$alias] ?? [],
+                description: $node->description,
             );
         }
 
@@ -47,6 +56,28 @@ final readonly class NodeGraphBuilder
         ));
 
         return $notes;
+    }
+
+    /**
+     * @param  array<string, list<string>>  $linksByAlias
+     * @return array<string, list<string>>
+     */
+    private function invertLinks(array $linksByAlias): array
+    {
+        $referencedByAlias = [];
+
+        foreach ($linksByAlias as $alias => $links) {
+            foreach ($links as $link) {
+                $referencedByAlias[$link][] = $alias;
+            }
+        }
+
+        foreach ($referencedByAlias as $link => $aliases) {
+            sort($aliases);
+            $referencedByAlias[$link] = $aliases;
+        }
+
+        return $referencedByAlias;
     }
 
     /**

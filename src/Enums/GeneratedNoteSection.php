@@ -15,6 +15,7 @@ enum GeneratedNoteSection: string
 {
     case Description = 'Description';
     case References = 'References';
+    case ReferencedBy = 'Referenced by';
 
     public function heading(): string
     {

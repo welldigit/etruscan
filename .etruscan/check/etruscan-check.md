@@ -1,0 +1,38 @@
+---
+alias: etruscan-check
+class: EtruscanCheckCommand
+fqcn: WellDigit\Etruscan\Commands\EtruscanCheckCommand
+extends: Illuminate\Console\Command
+source: src/Commands/EtruscanCheckCommand.php
+layer: command
+context:
+  - check
+  - cli
+generated_by: etruscan
+---
+
+## Description
+
+Audits the map for the mistakes annotations invite: duplicate aliases, off-vocabulary axis values,
+isolated nodes, and dangling wikilinks.
+
+## References
+
+- [[absolute-path-resolver]]
+- [[broken-link-checker]]
+- [[check-category]]
+- [[check-finding]]
+- [[check-severity]]
+- [[codebase-scanner]]
+- [[duplicate-alias-checker]]
+- [[etruscan-context]]
+- [[etruscan-layer]]
+- [[etruscan-node]]
+- [[node-graph-builder]]
+- [[orphan-node-checker]]
+- [[scanned-folder-resolver]]
+- [[vocabulary-checker]]
+
+## Referenced by
+
+- [[etruscan-service-provider]]

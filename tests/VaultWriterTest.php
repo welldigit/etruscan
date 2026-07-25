@@ -321,6 +321,73 @@ test('a human description survives regeneration and stays before the references'
         ->and(strpos($content, 'A description written by a human'))->toBeLessThan((int) strpos($content, '## References'));
 });
 
+test('a stale Referenced by section is treated as generated, not carried as manual content', function () {
+    File::ensureDirectoryExists($this->vaultPath);
+    File::put($this->vaultPath.'/alpha.md', implode("\n", [
+        '---',
+        'alias: alpha',
+        'ci-generated: barkme',
+        '---',
+        '',
+        '## References',
+        '',
+        '- [[beta]]',
+        '',
+        '## Referenced by',
+        '',
+        '- [[gone]]',
+        '',
+        'A human note.',
+    ])."\n");
+
+    app(VaultWriter::class)(
+        vaultPath: $this->vaultPath,
+        notes: [new NoteContent(alias: 'alpha', frontmatter: ['alias' => 'alpha'], links: ['beta'], referencedBy: ['fresh'])],
+        notePathResolver: new NotePathResolver(groupByAxisKeys: []),
+        markerKey: 'ci-generated',
+        markerValue: 'barkme',
+    );
+
+    $content = File::get($this->vaultPath.'/alpha.md');
+
+    expect($content)->toContain('- [[fresh]]')        // the freshly computed backlink
+        ->and($content)->not->toContain('[[gone]]')   // the stale backlink is gone, not preserved as manual
+        ->and($content)->toContain('A human note.');  // the actual manual content survives
+});
+
+test('a long one-line human description is wrapped on write and then stays stable', function () {
+    File::ensureDirectoryExists($this->vaultPath);
+    $oneLiner = trim(str_repeat('lorem ipsum dolor sit amet ', 12)); // > 100 chars on one line
+    File::put($this->vaultPath.'/alpha.md', implode("\n", [
+        '---',
+        'alias: alpha',
+        'ci-generated: barkme',
+        '---',
+        '',
+        '## Description',
+        '',
+        $oneLiner,
+    ])."\n");
+
+    $vaultWriter = app(VaultWriter::class);
+    $notes = [new NoteContent(alias: 'alpha', frontmatter: ['alias' => 'alpha'], links: [])];
+    $write = fn () => $vaultWriter(
+        vaultPath: $this->vaultPath,
+        notes: $notes,
+        notePathResolver: new NotePathResolver(groupByAxisKeys: []),
+        markerKey: 'ci-generated',
+        markerValue: 'barkme',
+    );
+
+    $write();
+    $wrapped = File::get($this->vaultPath.'/alpha.md');
+    $write();
+
+    expect($wrapped)->not->toContain($oneLiner)                       // the one long line is gone
+        ->and($wrapped)->toContain('lorem ipsum')                     // content preserved
+        ->and(File::get($this->vaultPath.'/alpha.md'))->toBe($wrapped); // second run is idempotent
+});
+
 test('a docblock description wins over a human-edited description section', function () {
     File::ensureDirectoryExists($this->vaultPath);
     File::put($this->vaultPath.'/alpha.md', implode("\n", [

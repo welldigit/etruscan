@@ -37,7 +37,7 @@ beforeEach(function () {
         final class Beta {}
         PHP);
 
-    config()->set('etruscan.roots', [$this->fixtureDirectory]);
+    config()->set('etruscan.scanned_folders', [$this->fixtureDirectory]);
 });
 
 afterEach(function () {

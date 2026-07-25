@@ -5,24 +5,24 @@ declare(strict_types=1);
 return [
 
     /*
-    | Directories scanned for attributed classes. Missing directories are
-    | skipped, so listing roots a project may not have is harmless. The
-    | ETRUSCAN_ROOTS env (comma-separated paths) overrides the default.
+    | Folders scanned for attributed classes, relative to the application
+    | root (absolute paths are also accepted). Missing folders are skipped,
+    | so listing ones a project may not have is harmless. Override with a
+    | comma-separated ETRUSCAN_SCANNED_FOLDERS env, e.g.
+    | ETRUSCAN_SCANNED_FOLDERS=app,src,packages/acme/src.
     */
 
-    'roots' => env('ETRUSCAN_ROOTS') !== null
-        ? array_map(trim(...), explode(',', (string) env('ETRUSCAN_ROOTS')))
-        : [
-            base_path('app'),
-            base_path('src'),
-        ],
+    'scanned_folders' => env('ETRUSCAN_SCANNED_FOLDERS', ['app', 'src']),
 
     /*
-    | Where the notes go. Generated notes are rewritten and stale ones removed
-    | on every run; manual content inside them always survives.
+    | Where the notes go, relative to the application root (an absolute path
+    | is also accepted). Defaults to a hidden `.etruscan` directory so the map
+    | sits beside the code without cluttering the project root. Generated notes
+    | are rewritten and stale ones removed on every run; manual content inside
+    | them always survives.
     */
 
-    'vault_path' => env('ETRUSCAN_VAULT', base_path('vault')),
+    'vault_path' => env('ETRUSCAN_VAULT', '.etruscan'),
 
     /*
     | Axis key(s) used to group notes into subfolders. An axis key is the
@@ -45,5 +45,19 @@ return [
     'generated_marker' => 'generated_by',
 
     'generated_value' => 'etruscan',
+
+    /*
+    | Optional allowed values per axis, enforced by `php artisan etruscan:check`.
+    | List an axis here to lock it to a known set — off-vocabulary values become
+    | errors, which stops a typo like 'serivce' from silently fragmenting the
+    | taxonomy. Axes left out stay free-form and get fuzzy typo warnings instead.
+    |
+    |   'vocabulary' => [
+    |       'layer'  => ['action', 'model', 'service', 'query', 'data', 'observer', 'policy'],
+    |       'domain' => ['booking', 'invoice', 'monitor'],
+    |   ],
+    */
+
+    'vocabulary' => [],
 
 ];

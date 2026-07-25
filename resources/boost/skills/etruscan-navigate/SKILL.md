@@ -1,9 +1,9 @@
 ---
-name: etruscan
+name: etruscan-navigate
 description: >
   The codebase-navigation skill for this project. Use it BEFORE any codebase
   exploration — before walking the file tree, before broad grep, before opening
-  files "to look around". The Etruscan vault (default `vault/` at app root)
+  files "to look around". The Etruscan vault (default `.etruscan/` at app root)
   is a generated markdown map of the codebase: one markdown note per meaningful
   class, with description, taxonomy, source path, and precomputed dependency
   links. Trigger on: "how is this codebase structured", "where is X", "what
@@ -62,10 +62,17 @@ Creates a monitor for the account after guarding the plan cap.
 - [[monitor]]
 - [[monitor-create-data]]
 
+## Referenced by
+
+- [[monitor-store-controller]]
+
 Anything below the generated blocks is a human's manual notes. Protected.
 ```
 
-Vault location: `config('etruscan.vault_path')`, default `vault/`
+`## References` is what the class points at (outbound); `## Referenced by` is
+who points at it (inbound) — so both directions of a dependency are on the note.
+
+Vault location: `config('etruscan.vault_path')`, default `.etruscan/`
 (`ETRUSCAN_VAULT` env overrides). Notes may be flat or grouped into folders by
 axis (`config('etruscan.group_by')`); wikilinks resolve identically either way.
 
@@ -73,7 +80,7 @@ axis (`config('etruscan.group_by')`); wikilinks resolve identically either way.
 
 **Find a class / understand what it does**
 
-1. Locate the note: alias is the filename — `vault/**/monitor-create.md`.
+1. Locate the note: alias is the filename — `.etruscan/**/monitor-create.md`.
 2. Read `## Description` for intent (docblock-mirrored or human-written — it
    is always there), frontmatter for role (`layer`, `context`…), and any
    manual notes below `## References`.
@@ -83,8 +90,8 @@ axis (`config('etruscan.group_by')`); wikilinks resolve identically either way.
 **Map the whole codebase / a subsystem**
 
 - List note filenames — that alone is the inventory of what matters.
-- Slice by any axis: `grep -rl 'layer: action' vault/` or
-  `grep -rl 'context: monitor' vault/`.
+- Slice by any axis: `grep -rl 'layer: action' .etruscan/` or
+  `grep -rl 'context: monitor' .etruscan/`.
 - Read the descriptions of one slice (cheap) before opening any source file.
 
 **Trace outgoing dependencies (what does X use?)**
@@ -94,7 +101,8 @@ axis (`config('etruscan.group_by')`); wikilinks resolve identically either way.
 
 **Trace inbound dependencies (who uses X?)**
 
-- `grep -rl '\[\[monitor-create\]\]' vault/` — every note linking to it.
+- Read the note's `## Referenced by` list — the inbound edges are precomputed
+  there. (Equivalently, `grep -rl '\[\[monitor-create\]\]' .etruscan/`.)
 - **Run this before modifying any annotated class.** It is the blast radius.
 
 **Plan a change to class X**
@@ -117,6 +125,9 @@ axis (`config('etruscan.group_by')`); wikilinks resolve identically either way.
   rewritten; human content survives and travels with relocated notes.
 - After you change annotated classes, their imports, or docblocks: regenerate
   (or tell the human to).
+- Suspect the map is inconsistent? `php artisan etruscan:check` reports
+  duplicate aliases, off-vocabulary axis values, orphan nodes, and broken
+  `[[wikilinks]]` — run it rather than eyeballing.
 
 **A meaningful class has no note**
 
@@ -148,13 +159,13 @@ axis (`config('etruscan.group_by')`); wikilinks resolve identically either way.
 
 Human: *"How does monitor creation work, and is it safe to add a quota check?"*
 
-1. `vault/**/monitor-create.md` → Description: "Creates a monitor for the
+1. `.etruscan/**/monitor-create.md` → Description: "Creates a monitor for the
    account after guarding the plan cap." Layer `action`, context `monitor`.
    A manual note below warns: "plan-cap guard must run before persistence —
    billing depends on it."
 2. References: `[[monitor]]`, `[[monitor-create-data]]` → skim both notes;
    `monitor-create-data` is the input DTO.
-3. Inbound: `grep -rl '\[\[monitor-create\]\]' vault/` → two callers.
+3. Inbound: `grep -rl '\[\[monitor-create\]\]' .etruscan/` → two callers.
 4. Open `src/Core/Domain/Monitor/Actions/MonitorCreate.php` via `source`.
 5. Answer using aliases, respecting the human note's constraint on guard order.
 

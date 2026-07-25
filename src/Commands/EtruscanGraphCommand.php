@@ -16,6 +16,8 @@ use WellDigit\Etruscan\Exceptions\ReservedAxisKeyException;
 use WellDigit\Etruscan\Services\CodebaseScanner;
 use WellDigit\Etruscan\Services\GraphPageRenderer;
 use WellDigit\Etruscan\Services\NodeGraphBuilder;
+use WellDigit\Etruscan\Utilities\AbsolutePathResolver;
+use WellDigit\Etruscan\Utilities\ScannedFolderResolver;
 
 #[Description('Render the node graph as a self-contained HTML page')]
 #[Signature('etruscan:graph
@@ -30,17 +32,18 @@ final class EtruscanGraphCommand extends Command
         NodeGraphBuilder $nodeGraphBuilder,
         GraphPageRenderer $graphPageRenderer,
     ): int {
-        /** @var list<string> $roots */
-        $roots = array_values((array) config('etruscan.roots', [base_path('src')]));
+        $scannedFolders = ScannedFolderResolver::resolve(config('etruscan.scanned_folders', ['app', 'src']));
 
         $outputOption = $this->option('output');
-        $outputPath = is_string($outputOption) && $outputOption !== ''
-            ? $outputOption
-            : (string) config('etruscan.vault_path', base_path('vault')).DIRECTORY_SEPARATOR.'graph.html';
+        $outputPath = AbsolutePathResolver::resolve(
+            is_string($outputOption) && $outputOption !== ''
+                ? $outputOption
+                : ((string) config('etruscan.vault_path', '.etruscan')).DIRECTORY_SEPARATOR.'graph.html',
+        );
 
         $this->info('Scanning for attributed classes ...');
 
-        $scannedClasses = $codebaseScanner($roots);
+        $scannedClasses = $codebaseScanner($scannedFolders);
 
         try {
             $notes = $nodeGraphBuilder($scannedClasses);

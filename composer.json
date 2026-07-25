@@ -62,8 +62,8 @@
         "pint:dry": "vendor/bin/pint --test",
         "rector:fix": "vendor/bin/rector process",
         "rector:dry": "vendor/bin/rector process --dry-run",
-        "vault": "ETRUSCAN_ROOTS=src vendor/bin/testbench etruscan:generate --vault=vault --group-by=context",
-        "vault:graph": "ETRUSCAN_ROOTS=src vendor/bin/testbench etruscan:graph --output=vault/graph.html",
+        "vault": "ETRUSCAN_SCANNED_FOLDERS=\"$(pwd)/src\" vendor/bin/testbench etruscan:generate --vault=\"$(pwd)/.etruscan\" --group-by=context",
+        "vault:graph": "ETRUSCAN_SCANNED_FOLDERS=\"$(pwd)/src\" vendor/bin/testbench etruscan:graph --output=\"$(pwd)/.etruscan/graph.html\"",
         "check": [
             "@rector:dry",
             "@pint:dry",

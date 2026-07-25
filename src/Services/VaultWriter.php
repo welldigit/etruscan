@@ -248,6 +248,12 @@ final readonly class VaultWriter
                 continue;
             }
 
+            if ($trimmed === GeneratedNoteSection::ReferencedBy->heading()) {
+                $section = GeneratedNoteSection::ReferencedBy;
+
+                continue;
+            }
+
             if ($section === GeneratedNoteSection::Description) {
                 if (str_starts_with($trimmed, '## ')) {
                     $section = null;
@@ -258,7 +264,7 @@ final readonly class VaultWriter
                 }
             }
 
-            if ($section === GeneratedNoteSection::References) {
+            if ($section === GeneratedNoteSection::References || $section === GeneratedNoteSection::ReferencedBy) {
                 if ($trimmed === '' || str_starts_with($trimmed, '- [[')) {
                     continue;
                 }

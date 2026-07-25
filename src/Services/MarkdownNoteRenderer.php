@@ -15,6 +15,8 @@ use WellDigit\Etruscan\Payloads\NoteContent;
 #[EtruscanContext('projection')]
 final readonly class MarkdownNoteRenderer
 {
+    private const int DESCRIPTION_WIDTH = 100;
+
     public function __invoke(NoteContent $noteContent, string $markerKey, string $markerValue, string $manualContent = '', string $carriedDescription = ''): string
     {
         $frontmatter = $noteContent->frontmatter;
@@ -46,7 +48,7 @@ final readonly class MarkdownNoteRenderer
         if ($description !== '') {
             $lines[] = GeneratedNoteSection::Description->heading();
             $lines[] = '';
-            $lines[] = $description;
+            $lines[] = $this->wrapDescription($description);
             $lines[] = '';
         }
 
@@ -57,6 +59,17 @@ final readonly class MarkdownNoteRenderer
             foreach ($noteContent->links as $link) {
                 $lines[] = '- [['.$link.']]';
             }
+
+            $lines[] = '';
+        }
+
+        if ($noteContent->referencedBy !== []) {
+            $lines[] = GeneratedNoteSection::ReferencedBy->heading();
+            $lines[] = '';
+
+            foreach ($noteContent->referencedBy as $referrer) {
+                $lines[] = '- [['.$referrer.']]';
+            }
         }
 
         $markdown = rtrim(implode("\n", $lines))."\n";
@@ -66,6 +79,29 @@ final readonly class MarkdownNoteRenderer
         }
 
         return $markdown;
+    }
+
+    /**
+     * Reflows the description as prose: each blank-line-separated paragraph is
+     * collapsed to a single logical line and re-wrapped, so hand-edits produce
+     * clean, even lines instead of freezing an earlier wrap. Paragraph breaks
+     * survive; content needing exact line control belongs in manual notes.
+     */
+    private function wrapDescription(string $description): string
+    {
+        $paragraphs = preg_split('/\R{2,}/', trim($description)) ?: [];
+
+        $wrapped = array_map(
+            fn (string $paragraph): string => wordwrap(
+                (string) preg_replace('/\s+/', ' ', trim($paragraph)),
+                self::DESCRIPTION_WIDTH,
+                "\n",
+                false,
+            ),
+            $paragraphs,
+        );
+
+        return implode("\n\n", $wrapped);
     }
 
     private function renderScalar(string $value): string

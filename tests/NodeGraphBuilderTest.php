@@ -47,6 +47,21 @@ test('notes are sorted by alias and links are sorted alphabetically', function (
         ->and($notes[2]->links)->toBe(['alpha', 'mike']);
 });
 
+test('each node lists the nodes that reference it, sorted, under referencedBy', function () {
+    $notes = (new NodeGraphBuilder)([
+        scannedNode(fqcn: 'App\\Monitor', alias: 'monitor', references: ['App\\Team']),
+        scannedNode(fqcn: 'App\\Incident', alias: 'incident', references: ['App\\Team']),
+        scannedNode(fqcn: 'App\\Team', alias: 'team'),
+    ]);
+
+    $byAlias = collect($notes)->keyBy('alias');
+
+    expect($byAlias['team']->referencedBy)->toBe(['incident', 'monitor'])   // both referrers, sorted
+        ->and($byAlias['team']->links)->toBe([])                            // team references nothing
+        ->and($byAlias['monitor']->referencedBy)->toBe([])                  // nothing references monitor
+        ->and($byAlias['monitor']->links)->toBe(['team']);
+});
+
 test('a node never links to itself and leading backslashes on references are normalized', function () {
     $notes = (new NodeGraphBuilder)([
         scannedNode(fqcn: 'App\\Monitor', alias: 'monitor', references: ['App\\Monitor', '\\App\\Team']),
