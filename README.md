@@ -82,7 +82,7 @@ Identity and dimensions are deliberately separate: the **alias is the permanent 
 
 ## How it works
 
-- **Plain markdown, any editor.** Notes are standard markdown with `[[wikilinks]]` — nothing to install, nothing proprietary. To browse the vault as a linked graph, [Obsidian](https://obsidian.md) is the suggested app.
+- **Plain markdown, any editor.** Notes are standard markdown with `[[wikilinks]]` — nothing to install, nothing proprietary. Read them in your editor, or render the whole vault as an interactive graph with `etruscan:graph` (see below).
 - **Static analysis only.** The scanner parses your source with nikic/php-parser — nothing is autoloaded or executed, and one unparseable file never breaks the run.
 - **Safe regeneration.** Frontmatter and `## References` are always rewritten; `## Description` only when the class has a docblock — a class without one leaves the Description section to you, and it survives every regeneration. Anything else you type in a note survives too and travels with the note when its folder changes. Hand-written notes without the generation marker are never touched.
 - **Folder layout by axis.** Set `group_by` (or `--group-by=context`) to project notes into `{vault}/{axisValue}/{alias}.md`. Several keys — comma-separated or a config array — nest folders in order: `--group-by=layer,domain` gives `{vault}/{layer}/{domain}/{alias}.md`, and a note missing an axis simply skips that level. Wikilinks are path-independent, so links keep working in any layout.
@@ -166,7 +166,7 @@ step 3.)
 php artisan etruscan:generate          # add --dry-run to preview first
 ```
 
-Then browse `.etruscan/` in your editor or Obsidian, or open the graph with
+Then browse `.etruscan/` in your editor, or open the graph with
 `php artisan etruscan:graph`. From here, the `etruscan-navigate` skill lets an
 agent read the map instead of crawling files.
 
