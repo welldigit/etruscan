@@ -1,8 +1,22 @@
 # Etruscan
 
-Project PHP-attribute-annotated classes into a vault of linked markdown notes — a living map of your codebase, regenerated on demand.
+Mark the classes that matter with PHP attributes. Etruscan projects them into a knowledge graph of plain markdown, committed to the repo: structure derived from real code by static analysis, intent written by humans, both readable by any coding agent in a few hundred tokens instead of a few thousand lines of source.
 
-Made by [Well Digit](https://welldigit.com) - [etruscan.dev](https://etruscan.dev)
+Made by [Well Digit](https://welldigit.com) — [etruscan.dev](https://etruscan.dev)
+
+## Two kinds of knowledge
+
+A codebase carries two kinds of knowledge, and an agent working in it needs both.
+
+**Structure** — what exists, what references what — lives in the source. Any tool can re-derive it, and agents do, on every task: grep, open, read, repeat. Most of a context window goes to rebuilding a picture the previous task already built and threw away.
+
+**Intent** — which classes matter, what each one is for, why the design took this shape — is not in the source at all. No amount of crawling recovers it. It lives in the heads of the people who wrote the code.
+
+Etruscan puts both into one artifact. Structure is derived by static analysis, so it cannot lie and cannot drift. Intent is declared by humans: one attribute and one sentence per class. The artifact is plain markdown in your repo — diffed in PRs, reviewed like code, regenerated on demand.
+
+The vault is the meeting point of human context and machine context. A person spends one sentence saying what a class is for; every agent that ever works in the repo reads that sentence for a handful of tokens instead of reconstructing an approximation from source. The map makes agents cheaper and sharper at once, and the human words on it survive every regeneration.
+
+## What a node looks like
 
 Annotate a class:
 
@@ -26,7 +40,7 @@ Run the projector:
 php artisan etruscan:generate
 ```
 
-And get one note per node, with class identity, the docblock summary, and `[[wikilinks]]` to every other node the class references:
+Each node becomes one note:
 
 ```markdown
 ---
@@ -53,18 +67,60 @@ Creates a monitor for the account after guarding the plan cap.
 - [[monitor-store-controller]]
 ```
 
-References are the nodes a class points at (from real code); Referenced by is the inverse — who points at it — so you can trace a dependency in either direction from the note itself.
+`## References` lists the nodes this class points at, extracted from real code. `## Referenced by` is the inverse — who points at it — so a dependency can be traced in either direction from the note itself.
 
-## The bundled vocabulary
+## Declared, not inferred
 
-`#[EtruscanNode('alias')]` marks a class as a node — that part is fixed. Every other dimension is an **axis**, and four are bundled as a sensible default taxonomy:
+Most attempts to give agents a map infer it. Embedding search retrieves whatever looks similar to the question. Auto-derived dependency graphs include every class and therefore rank none. Both answer with guesses.
 
-| Attribute | Frontmatter key | Question it answers | Example values |
-|-----------|-----------------|---------------------|----------------|
-| `EtruscanLayer` | `layer` | What *kind* of class is this, architecturally? | `action`, `model`, `query`, `data`, `observer`, `policy` |
-| `EtruscanDomain` | `domain` | Which *business area* owns it? | `booking`, `invoice`, `monitor` |
-| `EtruscanContext` | `context` | Which *bounded context* does it operate in? Repeatable when a class serves several. | `monitor`, `team`, `billing` |
-| `EtruscanSlice` | `slice` | Which *vertical feature* does it help deliver, across layers and domains? | `SystemSetup`, `Checkout`, `Onboarding` |
+An Etruscan graph is declared. A person decided this class is a node, gave it a stable name, and said what it is for. That judgment is the signal: information absent from the source, which no tool can re-derive at any price.
+
+Declaration buys determinism.
+
+- **"Who references `monitor-create`?" has an answer.** `## Referenced by` is an inverse index — the exact query grep handles worst, and the first question that matters before changing anything.
+- **Retrieval is file reads.** No vector store, no chunking, no similarity thresholds, no reranking, no infrastructure. The graph is markdown in a folder.
+- **Traversal is bounded.** A note is ~25 lines: identity, one line of intent, outbound edges, inbound edges. Following five hops costs a few hundred tokens. The crawl it replaces costs a dozen tool calls and thousands of lines of source — per task, every task.
+- **Scope is queryable.** Axes slice the graph: hand an agent the `billing` context or the `action` layer instead of the whole repo.
+
+## The contract
+
+Regeneration follows fixed ownership rules. They are the human–agent contract, enforced mechanically:
+
+| Section                             | Owner                             | On regeneration                              |
+| ----------------------------------- | --------------------------------- | -------------------------------------------- |
+| Frontmatter (identity, axes)        | derived from code                 | always rewritten                             |
+| `## References`, `## Referenced by` | derived from code                 | always rewritten                             |
+| `## Description`                    | docblock if present, human otherwise | rewritten only when the class has a docblock |
+| Everything else in the note         | human — or an agent writing as one | never touched                                |
+
+A note whose class lost its `#[EtruscanNode]` is deleted only when it contains nothing of yours; otherwise it is kept and reported (`--purge` overrides). Hand-written notes without the generation marker are never touched. Manual text travels with its note when the folder layout changes.
+
+The scanner parses source with nikic/php-parser. Nothing is autoloaded or executed, and one unparseable file never breaks a run.
+
+## If you are an agent
+
+This repository ships its own vault: [`.etruscan/`](.etruscan) is Etruscan's map of Etruscan. In any project that uses the package:
+
+1. **Read the map before crawling source.** Resolve the alias, read the note, follow the edges. Open the source file only when you need implementation detail — `source:` in the frontmatter is the exact path.
+2. **Use `## Referenced by` for impact analysis.** Before changing a class, the inbound edges tell you what breaks.
+3. **Treat human text as protected.** Anything outside the derived sections was written by a person and is the one part of the map you cannot reconstruct. Add below it; never rewrite it.
+4. **Never edit derived sections by hand.** Change the code or the attributes, then run `php artisan etruscan:generate`.
+5. **Keep the map complete.** A class without a node is invisible to retrieval. When you add a class that matters, annotate it and regenerate.
+
+With [Laravel Boost](https://github.com/laravel/boost), the `etruscan-navigate` skill encodes 1–4, `etruscan-annotate` encodes 5, and the core guideline keeps regeneration part of your normal working loop.
+
+## Identity and axes
+
+`#[EtruscanNode('alias')]` marks a class as a node — that part is fixed. The **alias is the permanent name** of a node: it keys the file, the wikilinks, and the human notes. Every other dimension is an **axis**, a lens you can reshape at any time. Swap the whole taxonomy and regenerate: the graph reorganizes around the same stable nodes without losing a note, a link, or a human's words.
+
+Four axes ship as a default taxonomy:
+
+| Attribute         | Frontmatter key | Question it answers                                                                 | Example values                                           |
+| ----------------- | --------------- | ----------------------------------------------------------------------------------- | -------------------------------------------------------- |
+| `EtruscanLayer`   | `layer`         | What *kind* of class is this, architecturally?                                      | `action`, `model`, `query`, `data`, `observer`, `policy` |
+| `EtruscanDomain`  | `domain`        | Which *business area* owns it?                                                      | `booking`, `invoice`, `monitor`                          |
+| `EtruscanContext` | `context`       | Which *bounded context* does it operate in? Repeatable when a class serves several. | `monitor`, `team`, `billing`                             |
+| `EtruscanSlice`   | `slice`         | Which *vertical feature* does it help deliver, across layers and domains?           | `SystemSetup`, `Checkout`, `Onboarding`                  |
 
 They are defaults, not a closed set. Any subclass of `EtruscanAxis` is an axis — no registration needed:
 
@@ -78,16 +134,6 @@ final readonly class EtruscanCriticality extends EtruscanAxis {}
 
 `#[EtruscanCriticality('high')]` now renders as `criticality: high` — the key is the class short name, lowercased, minus the leading `Etruscan`. Custom keys must not shadow the identity keys (`alias`, `class`, `fqcn`, `extends`, `source`); Etruscan fails loud if they do.
 
-Identity and dimensions are deliberately separate: the **alias is the permanent name** of a node — it keys the file, the wikilinks, and the manual notes — while the **axes are lenses** you can reshape at any time. Swap the whole taxonomy and regenerate: the graph reorganizes around the same stable nodes without losing a note, a link, or a human's words.
-
-## How it works
-
-- **Plain markdown, any editor.** Notes are standard markdown with `[[wikilinks]]` — nothing to install, nothing proprietary. Read them in your editor, or render the whole vault as an interactive graph with `etruscan:graph` (see below).
-- **Static analysis only.** The scanner parses your source with nikic/php-parser — nothing is autoloaded or executed, and one unparseable file never breaks the run.
-- **Safe regeneration.** Frontmatter and `## References` are always rewritten; `## Description` only when the class has a docblock — a class without one leaves the Description section to you, and it survives every regeneration. Anything else you type in a note survives too and travels with the note when its folder changes. Hand-written notes without the generation marker are never touched.
-- **Folder layout by axis.** Set `group_by` (or `--group-by=context`) to project notes into `{vault}/{axisValue}/{alias}.md`. Several keys — comma-separated or a config array — nest folders in order: `--group-by=layer,domain` gives `{vault}/{layer}/{domain}/{alias}.md`, and a note missing an axis simply skips that level. Wikilinks are path-independent, so links keep working in any layout.
-- **Orphan care.** A note whose class lost its `#[EtruscanNode]` is deleted only when it contains nothing of yours; otherwise it is kept and reported (`--purge` overrides).
-
 ## Installation
 
 ```bash
@@ -97,21 +143,16 @@ php artisan vendor:publish --tag=etruscan-config
 
 ### Install the agent skills into Laravel Boost
 
-If you use [Laravel Boost](https://github.com/laravel/boost), Etruscan's two
-skills (`etruscan-annotate`, `etruscan-navigate`) and its guideline live in the
-package and are discovered automatically — but you have to pull them into your
-agent config with one command:
+Etruscan's two skills (`etruscan-annotate`, `etruscan-navigate`) and its guideline live in the package and are discovered by [Laravel Boost](https://github.com/laravel/boost) automatically — pull them into your agent config with one command:
 
 ```bash
 php artisan boost:install     # first-time Boost setup — sets up Boost and picks up Etruscan
 php artisan boost:update      # already using Boost? just refresh to pick up Etruscan
 ```
 
-Confirm they landed with `php artisan boost:list-skills` — you should see
-`etruscan-annotate` and `etruscan-navigate` sourced from `welldigit/etruscan`.
+Confirm they landed with `php artisan boost:list-skills` — you should see `etruscan-annotate` and `etruscan-navigate` sourced from `welldigit/etruscan`.
 
-No Boost, or want the skills without the Composer package at all? Pull them
-straight from GitHub instead:
+No Boost, or want the skills without the Composer package at all? Pull them straight from GitHub:
 
 ```bash
 php artisan boost:add-skill welldigit/etruscan --all
@@ -121,11 +162,7 @@ php artisan boost:add-skill welldigit/etruscan --all
 
 Three steps take you from an un-annotated app to a live map.
 
-**1. Align `scanned_folders` with your codebase — the one setting you must get right.**
-The scanner only ever looks inside the folders listed in `config/etruscan.php`
-(default `['app', 'src']`). If your meaningful classes live elsewhere —
-`src/Core/…`, `app/Domain`, `packages/*/src` — set it there, or the scan finds
-nothing and the vault comes out empty.
+**1. Align `scanned_folders` with your codebase — the one setting you must get right.** The scanner only ever looks inside the folders listed in `config/etruscan.php` (default `['app', 'src']`). If your meaningful classes live elsewhere — `src/Core/…`, `app/Domain`, `packages/*/src` — set it there, or the scan finds nothing and the vault comes out empty.
 
 ```php
 // config/etruscan.php
@@ -133,9 +170,7 @@ nothing and the vault comes out empty.
 'vault_path'      => '.etruscan',      // where the notes are written (hidden by default)
 ```
 
-Prefer environment variables? Both are env-driven, so you can set them in `.env`
-without publishing the config — `ETRUSCAN_SCANNED_FOLDERS` (comma-separated)
-overrides the scanned folders, and `ETRUSCAN_VAULT` overrides the vault path:
+Both are env-driven, so you can set them in `.env` without publishing the config — `ETRUSCAN_SCANNED_FOLDERS` (comma-separated) overrides the scanned folders, and `ETRUSCAN_VAULT` overrides the vault path:
 
 ```dotenv
 ETRUSCAN_SCANNED_FOLDERS=app,src,packages/acme/src
@@ -144,10 +179,7 @@ ETRUSCAN_VAULT=.etruscan
 
 Relative paths resolve against the application root; absolute paths are used as-is.
 
-**2. Let a code agent annotate the codebase for you.** Adding `#[EtruscanNode]`
-to hundreds of classes by hand is the tedious part — so hand it to a
-[Boost](https://github.com/laravel/boost)-aware agent, which ships with the
-`etruscan-annotate` skill for exactly this. Paste a prompt like:
+**2. Let an agent annotate the codebase for you.** Adding `#[EtruscanNode]` to hundreds of classes by hand is the tedious part — so hand it to a Boost-aware agent, which ships with the `etruscan-annotate` skill for exactly this. Paste a prompt like:
 
 > Use the **etruscan-annotate** skill to bootstrap an Etruscan map for this
 > project. Read the codebase, then propose the axis taxonomy (layer / domain /
@@ -156,9 +188,7 @@ to hundreds of classes by hand is the tedious part — so hand it to a
 > and axis attributes, seed a one-line `## Description` where the intent is
 > clear from the code, and flag the classes whose *why* only I can explain.
 
-The agent proposes the schema, you review and tune it, then it writes the
-attributes across the codebase. (Already annotated by hand? Skip straight to
-step 3.)
+The agent proposes the schema, you review and tune it, then it writes the attributes across the codebase. Note the last clause of the prompt: the agent seeds what the code reveals and flags what it cannot know. The classes it flags are where your one sentence of intent is worth the most. (Already annotated by hand? Skip straight to step 3.)
 
 **3. Generate the vault.**
 
@@ -166,20 +196,7 @@ step 3.)
 php artisan etruscan:generate          # add --dry-run to preview first
 ```
 
-Then browse `.etruscan/` in your editor, or open the graph with
-`php artisan etruscan:graph`. From here, the `etruscan-navigate` skill lets an
-agent read the map instead of crawling files.
-
-## Configuration
-
-| Key | Env | Default | Meaning |
-|-----|-----|---------|---------|
-| `scanned_folders` | `ETRUSCAN_SCANNED_FOLDERS` (comma-separated) | `['app', 'src']` | Folders scanned, resolved against the app root unless already absolute; missing ones are skipped harmlessly |
-| `vault_path` | `ETRUSCAN_VAULT` | `'.etruscan'` | Output vault directory (hidden by default), resolved against the app root unless already absolute |
-| `group_by` | `ETRUSCAN_GROUP_BY` | `null` (flat) | Axis key(s) for subfolder grouping; comma-separated list or array nests folders in order |
-| `generated_marker` | — | `generated_by` | Frontmatter key marking generated notes |
-| `generated_value` | — | `etruscan` | Value stamped under the marker key |
-| `vocabulary` | — | `[]` | Optional allowed values per axis; `etruscan:check` flags off-vocabulary values (see below) |
+Browse `.etruscan/` in any editor, or render the graph with `php artisan etruscan:graph`. From here, the `etruscan-navigate` skill lets an agent read the map instead of crawling files.
 
 ## Command
 
@@ -192,6 +209,19 @@ php artisan etruscan:generate --group-by=none          # force flat layout
 php artisan etruscan:generate --purge             # also delete orphans holding manual notes
 ```
 
+## Configuration
+
+| Key                | Env                                          | Default          | Meaning                                                                                                     |
+| ------------------ | -------------------------------------------- | ---------------- | ----------------------------------------------------------------------------------------------------------- |
+| `scanned_folders`  | `ETRUSCAN_SCANNED_FOLDERS` (comma-separated) | `['app', 'src']` | Folders scanned, resolved against the app root unless already absolute; missing ones are skipped harmlessly |
+| `vault_path`       | `ETRUSCAN_VAULT`                             | `'.etruscan'`    | Output vault directory (hidden by default), resolved against the app root unless already absolute           |
+| `group_by`         | `ETRUSCAN_GROUP_BY`                          | `null` (flat)    | Axis key(s) for subfolder grouping; comma-separated list or array nests folders in order                    |
+| `generated_marker` | —                                            | `generated_by`   | Frontmatter key marking generated notes                                                                     |
+| `generated_value`  | —                                            | `etruscan`       | Value stamped under the marker key                                                                          |
+| `vocabulary`       | —                                            | `[]`             | Optional allowed values per axis; `etruscan:check` flags off-vocabulary values (see below)                  |
+
+Folder layout is a projection, not structure: `group_by` writes notes into `{vault}/{axisValue}/{alias}.md`, several keys nest folders in order, and a note missing an axis simply skips that level. Wikilinks are path-independent, so links keep working in any layout.
+
 ## Graph view
 
 Render the whole node graph as a single self-contained HTML page — force-directed layout, node colors by any axis, search, and a per-node panel with description, metadata, and inbound/outbound references:
@@ -201,7 +231,7 @@ php artisan etruscan:graph                                   # {vault}/graph.htm
 php artisan etruscan:graph --output=public/codebase.html     # custom location
 ```
 
-The page embeds the graph data and has no external dependencies — open the file in any browser, online or offline.
+The page embeds the graph data and has no external dependencies. Open it in any browser, online or offline, and share it with anyone — reading the map requires no repo access and no tooling.
 
 ## Checking the map
 
@@ -231,16 +261,6 @@ Lock an axis down in config once its taxonomy stabilises:
 
 Errors fail the command (exit 1) so CI can gate on it; warnings only fail under `--strict`.
 
-## AI code agents (Laravel Boost)
-
-Etruscan ships two [Laravel Boost](https://github.com/laravel/boost) skills and a guideline (install them with `php artisan boost:install` / `boost:update` — see [Installation](#install-the-agent-skills-into-laravel-boost)):
-
-- the **`etruscan-annotate` skill** bootstraps the map — point your agent at an un-annotated codebase and it designs the taxonomy (which axes, what values), decides which classes deserve a node, assigns stable aliases, and writes the `#[EtruscanNode]` + axis attributes for you, so you review a plan instead of editing hundreds of files by hand;
-- the **`etruscan-navigate` skill** reads the resulting vault as a codebase map — find a class by alias, follow `## References` edges, jump straight to the source file via the `source` frontmatter path, and treat human-written notes below the generated blocks as protected knowledge;
-- the **core guideline** makes agents regenerate the vault instead of letting it drift, and annotate new classes so they appear on the map.
-
-One designs the map, the other navigates it. The vault becomes shared ground between humans and agents: both read the same map, and manual notes written by either survive every regeneration.
-
 ## Development
 
 ```bash
@@ -252,7 +272,7 @@ composer pint:dry    # code style check
 composer check       # all of the above
 ```
 
-Etruscan consumes its own cooking: every class in `src/` is annotated, and [.etruscan/](.etruscan) is the package's own vault — regenerate it with `composer vault`, and its graph page with `composer vault:graph`. Those scripts pass absolute paths because they run through Testbench, where `base_path()` points at its own skeleton app, not this repo.
+Etruscan consumes its own cooking: every class in `src/` is annotated, and [`.etruscan/`](.etruscan) is the package's own vault — regenerate it with `composer vault`, and its graph page with `composer vault:graph`. Those scripts pass absolute paths because they run through Testbench, where `base_path()` points at its own skeleton app, not this repo.
 
 ## License
 
