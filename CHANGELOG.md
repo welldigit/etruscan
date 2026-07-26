@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.2] - 2026-07-26
+
+### Changed
+
+- Docs: the Getting started guide now documents the `ETRUSCAN_SCANNED_FOLDERS` and `ETRUSCAN_VAULT` environment variables (with a `.env` example) alongside the `scanned_folders` / `vault_path` config keys, and spells out how relative vs. absolute paths resolve.
+- Skills: the Boost skills now make explicit that `## Description` is a durable, human-owned specification — an agent drafts the real business-logic narrative, it is never regenerated when the class has no docblock, and developers enrich it over time — and that the bundled `layer` / `domain` / `context` / `slice` axes are a starting point, not a convention: any `EtruscanAxis` subclass defines a dimension named and valued however the codebase needs.
+
 ## [1.0.1] - 2026-07-25
 
 ### Added
