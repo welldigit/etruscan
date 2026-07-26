@@ -70,6 +70,13 @@ it rejects.
 
 ## Deciding the axes (the schema)
 
+Only `#[EtruscanNode]` is fixed. **Everything else is an open vocabulary you
+define** — the four bundled axes below are a suggested starting point, not a
+convention you must follow. An axis is any `EtruscanAxis` subclass, so you can
+name a dimension anything (`EtruscanTier`, `EtruscanTeam`, `EtruscanRisk`, …)
+with any values that fit the codebase in front of you. Treat the four as a
+sensible default to keep, extend, rename, or replace outright.
+
 Each axis answers one question. Keep them from smearing into each other:
 
 | Axis | Attribute | Answers | Typical source |
@@ -82,12 +89,15 @@ Each axis answers one question. Keep them from smearing into each other:
 - Values are lowercase, singular, and consistent — `action` not `Actions`,
   `booking` not `Bookings`. The value is what appears in frontmatter and in
   folder grouping.
-- **Custom axis** only when a dimension recurs and none of the four fit (e.g.
-  `EtruscanCriticality` → `criticality: high`). Create it as
-  `final readonly class EtruscanCriticality extends EtruscanAxis` with its own
-  `#[Attribute(Attribute::TARGET_CLASS | Attribute::IS_REPEATABLE)]` marker. The
-  key is its short name minus a leading `Etruscan`, lowercased — and must not be
-  one of the identity keys `alias`, `class`, `fqcn`, `extends`, `source`.
+- **Invent your own axis** whenever a dimension matters to this codebase and the
+  bundled four don't capture it — that is the intended path, not a workaround.
+  Create it as `final readonly class EtruscanCriticality extends EtruscanAxis`
+  with its own `#[Attribute(Attribute::TARGET_CLASS | Attribute::IS_REPEATABLE)]`
+  marker (`#[EtruscanCriticality('high')]` → `criticality: high`). The key is its
+  short name minus a leading `Etruscan`, lowercased — and must not be one of the
+  identity keys `alias`, `class`, `fqcn`, `extends`, `source`. Keep each axis
+  earning its place, though: another axis helps only if it slices the graph in a
+  way someone will actually use.
 - Recommend a `group_by`: a single axis (`domain`) for a flat business view, or
   nested (`layer,domain`) for a filing-cabinet layout. It is only presentation —
   wikilinks are path-independent — so optimise for how the human will browse.
@@ -178,10 +188,13 @@ Two places carry this, and they are owned differently:
   code** — the intent, the constraints, the "we chose this because…" — and it
   is exactly what makes the map worth more than a class list.
 
-As the annotating agent, seed these where you can state them with confidence
-from the code and its context, and explicitly flag the classes whose *why* only
-a human can supply — those are prompts for the human to fill in, not gaps to
-invent over.
+As the annotating agent, **draft a first-pass specification** for each node
+where you can state it with confidence from the code and its context — a real
+paragraph a developer would recognise, not the class name restated. Because this
+text is human-owned and **never regenerated**, it becomes a living document the
+developer **enriches over time** with the business rules, constraints, and
+decisions only they hold. Flag the classes whose *why* you cannot source from
+the code — those are prompts for a human to fill in, not gaps to invent over.
 
 ## Generate and fix
 

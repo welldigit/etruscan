@@ -130,7 +130,19 @@ nothing and the vault comes out empty.
 ```php
 // config/etruscan.php
 'scanned_folders' => ['app', 'src'],   // ← edit to match YOUR layout
+'vault_path'      => '.etruscan',      // where the notes are written (hidden by default)
 ```
+
+Prefer environment variables? Both are env-driven, so you can set them in `.env`
+without publishing the config — `ETRUSCAN_SCANNED_FOLDERS` (comma-separated)
+overrides the scanned folders, and `ETRUSCAN_VAULT` overrides the vault path:
+
+```dotenv
+ETRUSCAN_SCANNED_FOLDERS=app,src,packages/acme/src
+ETRUSCAN_VAULT=.etruscan
+```
+
+Relative paths resolve against the application root; absolute paths are used as-is.
 
 **2. Let a code agent annotate the codebase for you.** Adding `#[EtruscanNode]`
 to hundreds of classes by hand is the tedious part — so hand it to a

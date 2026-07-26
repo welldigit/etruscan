@@ -72,6 +72,16 @@ Anything below the generated blocks is a human's manual notes. Protected.
 `## References` is what the class points at (outbound); `## Referenced by` is
 who points at it (inbound) — so both directions of a dependency are on the note.
 
+**`## Description` is a specification, not a caption.** When a class has a
+docblock it mirrors that (and regenerates with the code). When it does not, the
+section is **human-owned and never regenerated** — a real plain-language spec of
+*why the class exists, when it runs, and what business rules it holds*, drafted
+by an agent and enriched by developers over time. Treat it as authoritative
+human knowledge you cannot recover from the code, and read it before you judge a
+class from its name. The axes (`layer`, `domain`, `context`, `slice`, or any
+custom one) are an open vocabulary — a project defines whatever dimensions fit
+it, so don't assume the four bundled ones are all you'll see.
+
 Vault location: `config('etruscan.vault_path')`, default `.etruscan/`
 (`ETRUSCAN_VAULT` env overrides). Notes may be flat or grouped into folders by
 axis (`config('etruscan.group_by')`); wikilinks resolve identically either way.
