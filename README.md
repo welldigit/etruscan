@@ -107,7 +107,7 @@ This repository ships its own vault: [`.etruscan/`](.etruscan) is Etruscan's map
 4. **Never edit derived sections by hand.** Change the code or the attributes, then run `php artisan etruscan:generate`.
 5. **Keep the map complete.** A class without a node is invisible to retrieval. When you add a class that matters, annotate it and regenerate.
 
-With [Laravel Boost](https://github.com/laravel/boost), the `etruscan-navigate` skill encodes 1–4, `etruscan-annotate` encodes 5, and the core guideline keeps regeneration part of your normal working loop.
+With [Laravel Boost](https://github.com/laravel/boost), the `etruscan-navigate` skill encodes 1–4, `etruscan-annotate` encodes 5, and the core guideline keeps regeneration part of your normal working loop. When the `etruscan` MCP server is connected, prefer its tools over raw file reads — `map-overview`, `search-map`, `lookup-node`, `trace-node` — one call each, measured so the team can improve the map (see below).
 
 ## Identity and axes
 
@@ -219,6 +219,7 @@ php artisan etruscan:generate --purge             # also delete orphans holding 
 | `generated_marker` | —                                            | `generated_by`   | Frontmatter key marking generated notes                                                                     |
 | `generated_value`  | —                                            | `etruscan`       | Value stamped under the marker key                                                                          |
 | `vocabulary`       | —                                            | `[]`             | Optional allowed values per axis; `etruscan:check` flags off-vocabulary values (see below)                  |
+| `usage_tracking`   | `ETRUSCAN_USAGE_TRACKING`                    | `true`           | Record MCP map consultations to `{vault}/usage.jsonl` for `etruscan:usage`; local-only, never leaves the machine |
 
 Folder layout is a projection, not structure: `group_by` writes notes into `{vault}/{axisValue}/{alias}.md`, several keys nest folders in order, and a note missing an axis simply skips that level. Wikilinks are path-independent, so links keep working in any layout.
 
@@ -260,6 +261,48 @@ Lock an axis down in config once its taxonomy stabilises:
 ```
 
 Errors fail the command (exit 1) so CI can gate on it; warnings only fail under `--strict`.
+
+## MCP server
+
+Etruscan ships its own MCP server, so agents query the map through structured tools instead of globbing markdown — one call replaces a search-plus-read round trip:
+
+| Tool           | What it answers                                                                    |
+| -------------- | ---------------------------------------------------------------------------------- |
+| `map-overview` | "What is this codebase made of?" — every node grouped by a taxonomy axis           |
+| `search-map`   | "Where is X handled?" — ranked matches over aliases, classes, axes and descriptions |
+| `lookup-node`  | "Tell me about this class" — the full note, ending with the source path to open    |
+| `trace-node`   | "What does it use / who uses it?" — one dependency hop with descriptions           |
+
+Connect it by adding the server to your agent's MCP config (for Claude Code, `.mcp.json` in the project root):
+
+```json
+{
+  "mcpServers": {
+    "etruscan": { "command": "php", "args": ["artisan", "etruscan:mcp"] }
+  }
+}
+```
+
+or `claude mcp add etruscan -- php artisan etruscan:mcp`. The server reads the vault on disk, so regenerate after changing annotated classes and the tools answer from the fresh map.
+
+**Security posture:** the server speaks stdio only — it is not an HTTP route, opens no port, and runs solely when someone with shell access starts it. All four tools are read-only over the vault's markdown (aliases are looked up, never used as file paths), the only write is the local usage log, and the server is not registered at all when `APP_ENV=production`.
+
+## Measuring usefulness
+
+Because agents reach the map through the MCP tools, usage is measured **server-side, as ground truth** — no honor system, no agent cooperation required. Every consultation is appended to `{vault}/usage.jsonl` (local-only; nothing ever leaves the machine), and:
+
+```bash
+php artisan etruscan:usage             # the report
+php artisan etruscan:usage --days=7    # recent window
+php artisan etruscan:usage --json      # machine-readable, for CI or dashboards
+php artisan etruscan:usage --html      # self-contained dashboard → {vault}/usage.html (--output overrides)
+```
+
+The `--html` dashboard is a single offline page like the graph view: stat cards, consultations per day with misses in red (watch them fall as you annotate), most-consulted nodes, and the annotation-candidate list — shareable with anyone, no tooling required.
+
+reports what the log proves: consultations per tool, the most-consulted nodes (the ones whose descriptions earn the most polish), and — the most valuable signal — **misses**: the exact aliases and queries agents asked for that the map could not answer. Misses are pre-validated annotation candidates; feed them to the `etruscan-annotate` skill and watch them disappear from the next report. That trend — miss velocity falling toward zero — is the honest benchmark of the map paying off.
+
+What this measures: every consultation through the MCP tools. What it cannot see: agents reading vault files directly (the skills steer them to the tools for exactly this reason). Disable recording with `ETRUSCAN_USAGE_TRACKING=false`; the tools keep answering either way. If you commit the log for a shared team view, add `.etruscan/usage.jsonl merge=union` to `.gitattributes` so parallel branches merge cleanly — or gitignore it for per-machine stats.
 
 ## Development
 

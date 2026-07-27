@@ -209,6 +209,9 @@ the code — those are prompts for a human to fill in, not gaps to invent over.
 - Then generate for real, and `php artisan etruscan:graph` to eyeball clusters
   and orphans — an isolated node often means a missed reference or a mis-scoped
   domain.
+- Before extending an existing map, run `php artisan etruscan:usage` and read
+  the **misses** — the exact aliases and queries agents asked the map for and
+  didn't get. They are pre-validated annotation candidates: absorb them first.
 
 ## Hard rules
 

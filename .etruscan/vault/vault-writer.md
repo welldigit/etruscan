@@ -19,10 +19,9 @@ unless purging, and prunes emptied folders. Files without the generation marker 
 - [[etruscan-context]]
 - [[etruscan-layer]]
 - [[etruscan-node]]
-- [[generated-note-section]]
-- [[identity-frontmatter-key]]
 - [[markdown-note-renderer]]
 - [[note-content]]
+- [[note-parser]]
 - [[note-path-resolver]]
 
 ## Referenced by

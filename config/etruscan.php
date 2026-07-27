@@ -57,7 +57,16 @@ return [
     |       'domain' => ['booking', 'invoice', 'monitor'],
     |   ],
     */
-
     'vocabulary' => [],
+
+    /*
+    | Local usage measurement. When enabled (the default), the Etruscan MCP
+    | tools append every map consultation — including the misses that tell
+    | you what to annotate next — to `{vault}/usage.jsonl`, and
+    | `php artisan etruscan:usage` aggregates the log into a report.
+    | Everything stays on disk next to the vault; nothing leaves the machine.
+    */
+
+    'usage_tracking' => env('ETRUSCAN_USAGE_TRACKING', true),
 
 ];

@@ -27,6 +27,21 @@ through the note's `source` path.**
 Cold file-tree crawling is the fallback, not the default. The vault exists so
 you never have to guess which files matter.
 
+**Prefer the Etruscan MCP tools when the `etruscan` server is connected** —
+one call replaces a glob-plus-read round trip, and every consultation
+(including what you looked for and could NOT find) is measured locally so the
+team can improve the map:
+
+| Tool | Use it for |
+|---|---|
+| `map-overview` | orient: every node grouped by a taxonomy axis, in one call |
+| `search-map` | find nodes by name or concept (aliases, classes, descriptions) |
+| `lookup-node` | read one node in full, then open its `source` path |
+| `trace-node` | follow dependency edges out (uses), in (used by), or both |
+
+No MCP connection? Read the `.etruscan/` files directly — everything below
+works either way.
+
 ## Why the vault beats raw exploration — concretely
 
 | You get | From the vault | From raw exploration |

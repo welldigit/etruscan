@@ -9,8 +9,6 @@ use Illuminate\Support\Facades\File;
 use WellDigit\Etruscan\Attributes\EtruscanNode;
 use WellDigit\Etruscan\Attributes\Vocabulary\EtruscanContext;
 use WellDigit\Etruscan\Attributes\Vocabulary\EtruscanLayer;
-use WellDigit\Etruscan\Enums\GeneratedNoteSection;
-use WellDigit\Etruscan\Enums\IdentityFrontmatterKey;
 use WellDigit\Etruscan\Payloads\NoteContent;
 
 #[EtruscanNode('vault-writer')]
@@ -18,10 +16,9 @@ use WellDigit\Etruscan\Payloads\NoteContent;
 #[EtruscanContext('vault')]
 final readonly class VaultWriter
 {
-    private const string LEGACY_MANUAL_DELIMITER = '%% Manual notes below this line are preserved across regenerations %%';
-
     public function __construct(
         private MarkdownNoteRenderer $markdownNoteRenderer,
+        private NoteParser $noteParser,
     ) {}
 
     /**
@@ -90,19 +87,17 @@ final readonly class VaultWriter
                 continue;
             }
 
-            $content = File::get($existingFile->getPathname());
+            $parsedNote = ($this->noteParser)(File::get($existingFile->getPathname()));
 
-            if (! $this->isGenerated(content: $content, markerKey: $markerKey)) {
+            if (! array_key_exists($markerKey, $parsedNote->frontmatter)) {
                 continue;
             }
 
-            $carriedContent = $this->extractCarriedContent($content);
-
             $index[] = [
                 'relativePath' => str_replace(DIRECTORY_SEPARATOR, '/', $existingFile->getRelativePathname()),
-                'alias' => $this->extractAlias($content),
-                'description' => $carriedContent['description'],
-                'manualContent' => $carriedContent['manual'],
+                'alias' => $parsedNote->alias,
+                'description' => $parsedNote->description,
+                'manualContent' => $parsedNote->manual,
             ];
         }
 
@@ -181,120 +176,5 @@ final readonly class VaultWriter
                 File::deleteDirectory($childDirectory);
             }
         }
-    }
-
-    private function isGenerated(string $content, string $markerKey): bool
-    {
-        $frontmatter = $this->extractFrontmatter($content);
-
-        return $frontmatter !== null
-            && preg_match('/^'.preg_quote($markerKey, '/').':\s/m', $frontmatter) === 1;
-    }
-
-    private function extractFrontmatter(string $content): ?string
-    {
-        if (! str_starts_with($content, '---')) {
-            return null;
-        }
-
-        $end = strpos($content, "\n---", 3);
-
-        return $end === false ? $content : substr($content, 0, $end);
-    }
-
-    private function extractAlias(string $content): ?string
-    {
-        $frontmatter = $this->extractFrontmatter($content);
-
-        if ($frontmatter === null
-            || preg_match('/^'.IdentityFrontmatterKey::Alias->value.':\s*(.+?)\s*$/m', $frontmatter, $matches) !== 1) {
-            return null;
-        }
-
-        $alias = $matches[1];
-
-        if (strlen($alias) >= 2 && str_starts_with($alias, '"') && str_ends_with($alias, '"')) {
-            return stripcslashes(substr($alias, 1, -1));
-        }
-
-        return $alias;
-    }
-
-    /**
-     * @return array{description: string, manual: string}
-     */
-    private function extractCarriedContent(string $content): array
-    {
-        $descriptionLines = [];
-        $manualLines = [];
-        $section = null;
-
-        foreach (preg_split('/\R/', $this->stripFrontmatter($content)) ?: [] as $line) {
-            $trimmed = rtrim($line);
-
-            if ($trimmed === self::LEGACY_MANUAL_DELIMITER) {
-                continue;
-            }
-
-            if ($trimmed === GeneratedNoteSection::Description->heading()) {
-                $section = GeneratedNoteSection::Description;
-
-                continue;
-            }
-
-            if ($trimmed === GeneratedNoteSection::References->heading()) {
-                $section = GeneratedNoteSection::References;
-
-                continue;
-            }
-
-            if ($trimmed === GeneratedNoteSection::ReferencedBy->heading()) {
-                $section = GeneratedNoteSection::ReferencedBy;
-
-                continue;
-            }
-
-            if ($section === GeneratedNoteSection::Description) {
-                if (str_starts_with($trimmed, '## ')) {
-                    $section = null;
-                } else {
-                    $descriptionLines[] = $line;
-
-                    continue;
-                }
-            }
-
-            if ($section === GeneratedNoteSection::References || $section === GeneratedNoteSection::ReferencedBy) {
-                if ($trimmed === '' || str_starts_with($trimmed, '- [[')) {
-                    continue;
-                }
-
-                $section = null;
-            }
-
-            $manualLines[] = $line;
-        }
-
-        return [
-            'description' => trim(implode("\n", $descriptionLines)),
-            'manual' => trim(implode("\n", $manualLines)),
-        ];
-    }
-
-    private function stripFrontmatter(string $content): string
-    {
-        if (! str_starts_with($content, '---')) {
-            return $content;
-        }
-
-        $end = strpos($content, "\n---", 3);
-
-        if ($end === false) {
-            return '';
-        }
-
-        $afterClosingFence = strpos($content, "\n", $end + 1);
-
-        return $afterClosingFence === false ? '' : substr($content, $afterClosingFence + 1);
     }
 }

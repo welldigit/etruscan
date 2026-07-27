@@ -20,4 +20,7 @@ Registers the etruscan config file and both artisan commands via spatie/laravel-
 - [[etruscan-generate]]
 - [[etruscan-graph]]
 - [[etruscan-layer]]
+- [[etruscan-mcp]]
+- [[etruscan-mcp-server]]
 - [[etruscan-node]]
+- [[etruscan-usage]]

@@ -23,4 +23,4 @@ desync the two.
 ## Referenced by
 
 - [[markdown-note-renderer]]
-- [[vault-writer]]
+- [[note-parser]]

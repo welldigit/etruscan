@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Etruscan MCP server (`php artisan etruscan:mcp`, registered as local server `etruscan` via laravel/mcp): four read-only tools — `map-overview` (nodes grouped by a taxonomy axis), `search-map` (ranked matches over aliases, classes, axes and descriptions), `lookup-node` (one full note, ending with the source path), `trace-node` (dependency edges one hop, either direction) — so agents query the map structurally instead of globbing markdown.
+- Ground-truth usage measurement: every MCP consultation is appended to `{vault}/usage.jsonl` (local-only), including misses — the exact aliases and queries the map could not answer. `php artisan etruscan:usage` (`--days`, `--json`) reports consultations per tool, top nodes, and misses as pre-validated annotation candidates. Disable with `ETRUSCAN_USAGE_TRACKING=false`.
+- Usage dashboard: `etruscan:usage --html` renders the report as a single self-contained page (`{vault}/usage.html`, `--output` overrides) — stat cards, consultations per day with the daily miss count, most-consulted nodes, and annotation candidates.
+- MCP hardening: the server is stdio-only, is not registered when `APP_ENV=production`, and recorded subjects are length-capped.
+- `NoteParser` service: the single owner of note-file parsing (frontmatter, description, links, referenced-by, manual content), shared by the vault writer and the new vault reader.
+- Skills and guideline now steer agents to prefer the MCP tools when the server is connected, and `etruscan-annotate` starts from the miss list in `etruscan:usage`.
+
 ## [1.0.2] - 2026-07-26
 
 ### Changed

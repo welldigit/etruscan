@@ -23,5 +23,9 @@ drift apart.
 ## Referenced by
 
 - [[graph-page-renderer]]
+- [[lookup-node]]
+- [[map-overview-builder]]
+- [[map-search]]
 - [[node-graph-builder]]
-- [[vault-writer]]
+- [[note-parser]]
+- [[search-map]]

@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Etruscan — map usage</title>
+<style>
+:root {
+    --bg: #17181c;
+    --surface: #1f2127;
+    --border: #2c2f37;
+    --text: #dcdee6;
+    --muted: #8b8f98;
+    --accent: #9b7bff;
+    --hit: #58b368;
+    --miss: #e06c75;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: var(--bg); color: var(--text); font: 14px/1.5 -apple-system, "Segoe UI", Roboto, sans-serif; padding: 24px; }
+.wrap { max-width: 1060px; margin: 0 auto; }
+header { display: flex; align-items: baseline; gap: 12px; margin-bottom: 20px; }
+.brand { font-size: 20px; font-weight: 600; }
+.brand em { color: var(--accent); font-style: normal; }
+#window { color: var(--muted); font-size: 12px; margin-left: auto; }
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 20px; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; }
+.card b { display: block; font-size: 26px; font-weight: 600; }
+.card span { color: var(--muted); font-size: 12px; }
+.card.hit b { color: var(--hit); }
+.card.miss b { color: var(--miss); }
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 800px) { .grid { grid-template-columns: 1fr; } }
+section { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px; margin-bottom: 12px; }
+section h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); margin-bottom: 12px; }
+.days { display: flex; align-items: flex-end; gap: 4px; height: 120px; }
+.day { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; height: 100%; min-width: 8px; position: relative; }
+.day .bar { background: var(--accent); border-radius: 3px 3px 0 0; opacity: .85; }
+.day .bar.miss { background: var(--miss); border-radius: 0; }
+.day:hover .tip { display: block; }
+.tip { display: none; position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 4px 8px; font-size: 11px; white-space: nowrap; z-index: 2; margin-bottom: 4px; }
+.daylabels { display: flex; gap: 4px; margin-top: 6px; }
+.daylabels span { flex: 1; text-align: center; font-size: 9px; color: var(--muted); overflow: hidden; }
+.rows .row { display: grid; grid-template-columns: minmax(140px, 40%) 1fr 34px; align-items: center; gap: 10px; margin-bottom: 7px; font-size: 13px; }
+.rows .label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rows .track { background: var(--bg); border-radius: 4px; height: 10px; overflow: hidden; }
+.rows .fill { height: 100%; background: var(--accent); border-radius: 4px; }
+.rows .fill.miss { background: var(--miss); }
+.rows .count { text-align: right; color: var(--muted); font-variant-numeric: tabular-nums; }
+.hint { color: var(--muted); font-size: 12px; margin-top: 10px; }
+.hint code { color: var(--text); background: var(--bg); padding: 1px 5px; border-radius: 4px; }
+footer { color: var(--muted); font-size: 12px; margin-top: 8px; display: flex; gap: 16px; }
+.empty { text-align: center; color: var(--muted); padding: 60px 0; }
+.warn { color: var(--miss); }
+</style>
+</head>
+<body>
+<div class="wrap">
+    <header>
+        <span class="brand">Etruscan <em>map usage</em></span>
+        <span id="window"></span>
+    </header>
+    <div id="content"></div>
+    <footer id="footer"></footer>
+</div>
+<script id="etruscan-data" type="application/json">{"window_days":null,"events":8,"by_type":{"overview":1,"lookup":4,"trace":1,"search":2},"by_day":{"2026-07-27":{"events":8,"misses":2}},"hits":6,"misses":2,"top_nodes":{"vault-writer":2,"node-graph-builder":1,"note-parser":1},"missed_subjects":{"vault-sweeper":1,"queue worker":1},"empty_searches":{"queue worker":1},"distinct_nodes_consulted":3,"skipped":{"malformed":0,"newer_schema":0}}</script>
+<script>
+'use strict';
+(() => {
+    const data = JSON.parse(document.getElementById('etruscan-data').textContent);
+    const content = document.getElementById('content');
+
+    document.getElementById('window').textContent = data.window_days
+        ? 'last ' + data.window_days + ' day(s) — local data, nothing leaves this machine'
+        : 'all recorded usage — local data, nothing leaves this machine';
+
+    if (data.events === 0) {
+        content.innerHTML = '<section><div class="empty">No usage recorded yet — agents have not consulted the map through the MCP tools.</div></section>';
+        return;
+    }
+
+    const el = (tag, className, text) => {
+        const node = document.createElement(tag);
+        if (className) node.className = className;
+        if (text !== undefined) node.textContent = text;
+        return node;
+    };
+
+    // --- stat cards -------------------------------------------------------
+    const cards = el('div', 'cards');
+    const hitRate = data.hits + data.misses > 0 ? Math.round(100 * data.hits / (data.hits + data.misses)) + '%' : '—';
+    [
+        ['Consultations', data.events, ''],
+        ['Hits', data.hits, 'hit'],
+        ['Misses', data.misses, 'miss'],
+        ['Hit rate', hitRate, ''],
+        ['Distinct nodes', data.distinct_nodes_consulted, ''],
+    ].forEach(([label, value, kind]) => {
+        const card = el('div', 'card' + (kind ? ' ' + kind : ''));
+        card.append(el('b', null, String(value)), el('span', null, label));
+        cards.appendChild(card);
+    });
+    content.appendChild(cards);
+
+    // --- per-day chart ----------------------------------------------------
+    const days = Object.entries(data.by_day);
+    if (days.length > 0) {
+        const section = el('section');
+        section.appendChild(el('h2', null, 'Consultations per day — misses in red (watch them fall as you annotate)'));
+        const chart = el('div', 'days');
+        const labels = el('div', 'daylabels');
+        const max = Math.max(...days.map(([, d]) => d.events));
+        days.forEach(([date, d]) => {
+            const day = el('div', 'day');
+            const missBar = el('div', 'bar miss');
+            missBar.style.height = (d.misses / max * 100) + '%';
+            const hitBar = el('div', 'bar');
+            hitBar.style.height = ((d.events - d.misses) / max * 100) + '%';
+            day.appendChild(el('div', 'tip', date + ': ' + d.events + ' consultation(s), ' + d.misses + ' miss(es)'));
+            day.append(hitBar, missBar);
+            chart.appendChild(day);
+            labels.appendChild(el('span', null, date.slice(5)));
+        });
+        section.append(chart);
+        if (days.length <= 21) section.append(labels);
+        content.appendChild(section);
+    }
+
+    // --- two-column: top nodes / misses ----------------------------------
+    const grid = el('div', 'grid');
+
+    const bars = (title, entries, missStyle, hint) => {
+        const section = el('section');
+        section.appendChild(el('h2', null, title));
+        const rows = el('div', 'rows');
+        const values = Object.entries(entries);
+        if (values.length === 0) {
+            rows.appendChild(el('div', 'hint', '(none)'));
+        } else {
+            const max = Math.max(...values.map(([, count]) => count));
+            values.forEach(([label, count]) => {
+                const row = el('div', 'row');
+                row.appendChild(el('div', 'label', label));
+                const track = el('div', 'track');
+                const fill = el('div', 'fill' + (missStyle ? ' miss' : ''));
+                fill.style.width = (count / max * 100) + '%';
+                track.appendChild(fill);
+                row.append(track, el('div', 'count', String(count)));
+                rows.appendChild(row);
+            });
+        }
+        section.appendChild(rows);
+        if (hint) {
+            const hintNode = el('div', 'hint');
+            hintNode.innerHTML = hint;
+            section.appendChild(hintNode);
+        }
+        return section;
+    };
+
+    grid.appendChild(bars('Most consulted nodes', data.top_nodes, false,
+        'The load-bearing notes — their descriptions earn the most polish.'));
+    grid.appendChild(bars('Misses — annotation candidates', data.missed_subjects, true,
+        'What agents asked for and the map could not answer. Feed these to <code>etruscan-annotate</code>, regenerate, and watch them disappear.'));
+    content.appendChild(grid);
+
+    // --- by tool + empty searches ----------------------------------------
+    const grid2 = el('div', 'grid');
+    grid2.appendChild(bars('Consultations by tool', data.by_type, false));
+    grid2.appendChild(bars('Searches that came back empty', data.empty_searches, true,
+        'Weak spots in naming or descriptions — or missing nodes.'));
+    content.appendChild(grid2);
+
+    // --- footer -----------------------------------------------------------
+    const footer = document.getElementById('footer');
+    if (data.skipped.malformed > 0 || data.skipped.newer_schema > 0) {
+        footer.appendChild(el('span', 'warn',
+            'Skipped log lines: ' + data.skipped.malformed + ' malformed, ' + data.skipped.newer_schema + ' from a newer schema.'));
+    }
+    footer.appendChild(el('span', null, 'Generated by php artisan etruscan:usage --html'));
+})();
+</script>
+</body>
+</html>
