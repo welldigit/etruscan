@@ -2,7 +2,11 @@ name: tests
 
 on:
   push:
-    branches: [main]
+    # Release branches too, so a release is proven green before it is
+    # merged rather than after — main-only triggers mean the first run of
+    # any change to this file happens on main, which is the one place a
+    # red run is expensive.
+    branches: [main, 'release/**']
   pull_request:
     branches: [main]
 
