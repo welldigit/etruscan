@@ -41,9 +41,10 @@
     },
     "require-dev": {
         "larastan/larastan": "^3.0",
-        "laravel/pint": "^1.0",
+        "laravel/boost": "^2.5",
+        "laravel/pint": "^1.20",
         "orchestra/testbench": "^11.0",
-        "pestphp/pest": "^4.0",
+        "pestphp/pest": "^4.7",
         "rector/rector": "^2.5"
     },
     "autoload": {
@@ -58,13 +59,14 @@
     },
     "scripts": {
         "test": "vendor/bin/pest",
+        "test:coverage": "vendor/bin/pest --coverage --min=95",
         "phpstan": "vendor/bin/phpstan analyse --memory-limit=2G",
         "pint:fix": "vendor/bin/pint",
         "pint:dry": "vendor/bin/pint --test",
         "rector:fix": "vendor/bin/rector process",
         "rector:dry": "vendor/bin/rector process --dry-run",
         "vault": "ETRUSCAN_SCANNED_FOLDERS=\"$(pwd)/src\" vendor/bin/testbench etruscan:generate --vault=\"$(pwd)/.etruscan\" --group-by=context",
-        "vault:graph": "ETRUSCAN_SCANNED_FOLDERS=\"$(pwd)/src\" vendor/bin/testbench etruscan:graph --output=\"$(pwd)/.etruscan/graph.html\"",
+        "vault:graph": "ETRUSCAN_SCANNED_FOLDERS=\"$(pwd)/src\" ETRUSCAN_VAULT=\"$(pwd)/.etruscan\" vendor/bin/testbench etruscan:graph",
         "check": [
             "@rector:dry",
             "@pint:dry",

@@ -1,0 +1,47 @@
+name: upstream
+
+# Early warning for the one dependency this package cannot absorb quietly.
+# `laravel/mcp` is still pre-1.0, so `^0.9` deliberately refuses v1.0 — which
+# means the day v1 ships, Etruscan is what blocks its consumers from upgrading.
+# This runs the suite against the development branch, ahead of the constraint,
+# so the incompatibility surfaces here rather than in someone's app.
+#
+# It is meant to go red. A scheduled workflow that fails emails the repository
+# owner, which is the whole notification mechanism — do not add
+# `continue-on-error`, or this job becomes permanently green and invisible.
+
+on:
+  schedule:
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  newest-mcp:
+    name: laravel/mcp dev-main
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: mbstring
+          coverage: none
+
+      - name: Install ahead of the constraint
+        run: |
+          composer config minimum-stability dev
+          composer config prefer-stable true
+          composer require --no-interaction --no-update "laravel/mcp:dev-main"
+          composer update --no-interaction --prefer-dist
+
+      - name: Report the resolved version
+        run: composer show laravel/mcp | head -3
+
+      - name: Pest
+        run: composer test

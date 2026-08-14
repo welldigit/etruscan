@@ -1,7 +1,29 @@
 includes:
     - vendor/larastan/larastan/extension.neon
+    - vendor/pestphp/pest/phpstan-pest-extension.neon
 
 parameters:
-    level: 7
+    level: 9
     paths:
         - src
+        - tests
+
+    ignoreErrors:
+        # Inside a Pest closure `$this` is rebound to the test case at runtime,
+        # but statically it still reads as the pending call. Everything the
+        # tests hang on `$this` is declared on Tests\TestCase; this only silences
+        # PHPStan's inability to see the rebinding, not undeclared state.
+        -
+            identifier: property.notFound
+            path: tests/*
+            message: '#Access to an undefined property Pest\\PendingCalls\\TestCall::#'
+        -
+            identifier: method.notFound
+            path: tests/*
+            message: '#Call to an undefined method Pest\\PendingCalls\\TestCall::#'
+        # `->not` is Pest's negation proxy, resolved at runtime on the
+        # expectation object; the shipped extension does not model it.
+        -
+            identifier: property.notFound
+            path: tests/*
+            message: '#undefined property Pest\\Mixins\\Expectation<[^>]*>::\$not#'
