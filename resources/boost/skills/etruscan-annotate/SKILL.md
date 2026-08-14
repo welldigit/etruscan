@@ -33,7 +33,8 @@ Two decisions, then the mechanical apply:
    each with a permanent alias.
 
 Then: write the attributes, run `php artisan etruscan:generate`, fix anything
-it rejects.
+it rejects — and fill each new note's empty `## Description` slot by hand (see
+*The description is a specification*).
 
 ## Before you start
 
@@ -67,6 +68,10 @@ it rejects.
    attributes*). Then `php artisan etruscan:generate --dry-run`; resolve every
    fail-loud error; generate for real; render `etruscan:graph` and sanity-check
    the shape. The tool's exceptions are your linter — trust them.
+7. **Fill the descriptions.** With the vault generated, every new note carries
+   an empty `## Description` slot — fill it with a first-pass specification
+   (see *The description is a specification*) and flag the classes whose *why*
+   only the human can supply.
 
 ## Deciding the axes (the schema)
 
@@ -138,17 +143,14 @@ meaningful classes point at it, it belongs on the map.*
 
 ## Applying the attributes
 
-Per node class, add the imports and the attributes directly above the class,
-**after** the docblock (Pint keeps that order):
+Per node class, add the imports and the attributes directly above the class
+(after any existing docblock — Pint keeps that order):
 
 ```php
 use WellDigit\Etruscan\Attributes\EtruscanNode;
 use WellDigit\Etruscan\Attributes\Vocabulary\EtruscanContext;
 use WellDigit\Etruscan\Attributes\Vocabulary\EtruscanLayer;
 
-/**
- * Creates a booking after guarding availability.
- */
 #[EtruscanNode('booking-create')]
 #[EtruscanLayer('action')]
 #[EtruscanContext('booking')]
@@ -157,11 +159,9 @@ final readonly class BookingCreate { /* … */ }
 
 - Repeat an axis for multiple values: `#[EtruscanContext('booking')]`
   `#[EtruscanContext('billing')]`.
-- The **docblock summary becomes the note's `## Description`.** If a class has a
-  crisp one-line summary, it flows into the vault for free. You *may* add a
-  missing one-line summary — but summarise only what the code demonstrably does;
-  never invent behaviour. Classes with no docblock get their description from
-  human-written notes in the vault instead (see the `etruscan-navigate` skill).
+- **Docblocks never reach the vault.** They are ordinary code documentation; the
+  note's `## Description` is written by hand, into the note, after generation
+  (next section). Don't add docblocks as a way to populate the map — it isn't one.
 - Work in reviewable batches (by folder or domain), not one 300-file sweep.
 
 ## The description is a specification, not a label
@@ -173,28 +173,25 @@ invariants* it holds. A reader should come away understanding the class's role
 without opening the source — the rules it enforces, the decisions it makes, the
 edge cases it guards, the reason it was built this way.
 
-Two places carry this, and they are owned differently:
+It lives in exactly one place: the note's `## Description`. The generator
+seeds the empty heading in every note — that slot is its only contribution;
+the words are written by hand. The text is **human-owned, keyed to the alias,
+and never regenerated** — attributes
+can change, the taxonomy can be reshuffled, folders can regroup, and the
+description stays with its node. It is never harvested from docblocks or
+source; what the map says about a class is exactly what someone chose to say.
+This is knowledge **not recoverable from reading the code** — the intent, the
+constraints, the "we chose this because…" — and it is exactly what makes the
+map worth more than a class list.
 
-- **The docblock summary** (auto-mirrored into `## Description`, regenerated
-  with the code) stays a crisp, accurate one-liner. Keep it factual —
-  summarise only what the code demonstrably does; never speculate here, because
-  it must never drift from the source it mirrors.
-- **The human specification** — the fuller *why / when / how / business-rule*
-  narrative — belongs in the vault. When a class has no docblock, the
-  `## Description` section is human-owned and survives every regeneration, so
-  write the real specification straight into it. When a class *does* have a
-  docblock, put the deeper narrative in the manual notes below the generated
-  blocks. Either way this is knowledge **not recoverable from reading the
-  code** — the intent, the constraints, the "we chose this because…" — and it
-  is exactly what makes the map worth more than a class list.
-
-As the annotating agent, **draft a first-pass specification** for each node
-where you can state it with confidence from the code and its context — a real
-paragraph a developer would recognise, not the class name restated. Because this
-text is human-owned and **never regenerated**, it becomes a living document the
-developer **enriches over time** with the business rules, constraints, and
-decisions only they hold. Flag the classes whose *why* you cannot source from
-the code — those are prompts for a human to fill in, not gaps to invent over.
+As the annotating agent, after generating the vault, **write a first-pass
+specification into each new note** where you can state it with confidence from
+the code and its context — a real paragraph a developer would recognise, not
+the class name restated. You are writing as the human here, through the manual
+channel: the text you write becomes a living document the developer **enriches
+over time** with the business rules, constraints, and decisions only they hold.
+Flag the classes whose *why* you cannot source from the code — those are
+prompts for a human to fill in, not gaps to invent over.
 
 ## Generate and fix
 
@@ -226,12 +223,10 @@ the code — those are prompts for a human to fill in, not gaps to invent over.
    `source`) when naming a custom axis.
 6. **Never touch existing annotations or manual notes.** Extend the map; don't
    rewrite what is already on it.
-7. **Docblocks state only what the code does; specifications explain why.** A
-   docblock summary you add (auto-mirrored, regenerated) must not carry claims
-   the source doesn't back. The richer *why / when / business-logic*
-   specification belongs in the human-owned Description or manual notes — write
-   what you can support from the code and context, and flag the rest for the
-   human rather than inventing intent.
+7. **The Description is manual — never derived, never invented.** Docblocks are
+   code documentation and never flow into the vault. Write each specification
+   into the note itself, claim only what the code and context back, and flag
+   the rest for the human rather than inventing intent.
 
 ## Worked example
 

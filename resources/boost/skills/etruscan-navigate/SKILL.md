@@ -15,8 +15,10 @@ description: >
 # Etruscan — read the map before you crawl the code
 
 This project ships a generated markdown vault (`welldigit/etruscan`): one note
-per annotated class. It is not documentation *about* the code — it is an index
-*generated from* the code, so it cannot drift.
+per annotated class. It is not documentation *about* the code: the derived
+sections — identity, references, inverse references — are an index *generated
+from* the code, so they cannot drift, and the `## Description` is human
+testimony kept right beside those freshly derived edges.
 
 ## The one rule
 
@@ -50,7 +52,7 @@ works either way.
 | Cost | A note is ~20–40 lines; 10 notes ≈ one subsystem overview | One controller can cost more context than 10 notes |
 | Dependencies | `## References` — precomputed edges from real code references | You reverse-engineer imports file by file |
 | Location | `source` (exact file path) + `fqcn` (exact symbol) | Search and hope |
-| Intent | `## Description` — mirrors the docblock, or human-maintained when there is none | Read the whole class to infer purpose |
+| Intent | `## Description` — the human's own words, kept on the note | Read the whole class to infer purpose |
 | Human knowledge | Manual notes below the generated blocks — decisions and context **not recoverable from code** | Doesn't exist anywhere else |
 | Shared vocabulary | Aliases are the names the human uses too — `monitor-create` means the same thing to both of you | You and the human describe code differently |
 
@@ -87,15 +89,18 @@ Anything below the generated blocks is a human's manual notes. Protected.
 `## References` is what the class points at (outbound); `## Referenced by` is
 who points at it (inbound) — so both directions of a dependency are on the note.
 
-**`## Description` is a specification, not a caption.** When a class has a
-docblock it mirrors that (and regenerates with the code). When it does not, the
-section is **human-owned and never regenerated** — a real plain-language spec of
-*why the class exists, when it runs, and what business rules it holds*, drafted
-by an agent and enriched by developers over time. Treat it as authoritative
-human knowledge you cannot recover from the code, and read it before you judge a
-class from its name. The axes (`layer`, `domain`, `context`, `slice`, or any
-custom one) are an open vocabulary — a project defines whatever dimensions fit
-it, so don't assume the four bundled ones are all you'll see.
+**`## Description` is a specification, not a caption — and it is manual.** The
+generator seeds the empty heading in every note; that slot is its only
+contribution. The text is **human-owned and never regenerated**: written
+straight into the note (by a developer, or by an agent writing as one), keyed
+to the alias, and carried untouched through every regeneration, taxonomy
+change, and folder move. It is a
+real plain-language spec of *why the class exists, when it runs, and what
+business rules it holds* — never harvested from docblocks or source. Treat it as
+authoritative human knowledge you cannot recover from the code, and read it
+before you judge a class from its name. The axes (`layer`, `domain`, `context`,
+`slice`, or any custom one) are an open vocabulary — a project defines whatever
+dimensions fit it, so don't assume the four bundled ones are all you'll see.
 
 Vault location: `config('etruscan.vault_path')`, default `.etruscan/`
 (`ETRUSCAN_VAULT` env overrides). Notes may be flat or grouped into folders by
@@ -106,9 +111,9 @@ axis (`config('etruscan.group_by')`); wikilinks resolve identically either way.
 **Find a class / understand what it does**
 
 1. Locate the note: alias is the filename — `.etruscan/**/monitor-create.md`.
-2. Read `## Description` for intent (docblock-mirrored or human-written — it
-   is always there), frontmatter for role (`layer`, `context`…), and any
-   manual notes below `## References`.
+2. Read `## Description` for intent (human-written — an empty one is an
+   unfilled slot worth filling, not a generator fault), frontmatter for role
+   (`layer`, `context`…), and any manual notes below `## References`.
 3. Need implementation detail? Open the file at `source`. The note is a
    signpost, never a substitute.
 
@@ -148,8 +153,9 @@ axis (`config('etruscan.group_by')`); wikilinks resolve identically either way.
 - Generate it, don't report it absent: `php artisan etruscan:generate`
   (`--dry-run` to preview). Regeneration is safe — only generated blocks are
   rewritten; human content survives and travels with relocated notes.
-- After you change annotated classes, their imports, or docblocks: regenerate
-  (or tell the human to).
+- After you change annotated classes, their attributes, or their imports:
+  regenerate (or tell the human to). Regeneration never touches descriptions —
+  they are the human's.
 - Suspect the map is inconsistent? `php artisan etruscan:check` reports
   duplicate aliases, off-vocabulary axis values, orphan nodes, and broken
   `[[wikilinks]]` — run it rather than eyeballing.
@@ -158,16 +164,19 @@ axis (`config('etruscan.group_by')`); wikilinks resolve identically either way.
 
 - The map is curated: on the map ⇒ it matters; matters but missing ⇒ annotate.
 - Add `#[EtruscanNode('kebab-alias')]` plus axes (`#[EtruscanLayer('action')]`,
-  `#[EtruscanContext('monitor')]`, …) from `WellDigit\Etruscan\Attributes`, and a
-  docblock summary — it becomes the note's Description. Then regenerate.
+  `#[EtruscanContext('monitor')]`, …) from `WellDigit\Etruscan\Attributes`, then
+  regenerate — and fill the empty `## Description` seeded in the new note, as a
+  human would.
 
 ## Hard rules
 
-1. **Never edit the frontmatter or `## References`** — the generator owns
-   them; your edits will be overwritten and may corrupt the map.
-   `## Description` is owned by the docblock when the class has one (edits
-   are overwritten); when the class has no docblock, the Description section
-   is human-owned and survives regeneration.
+1. **Never edit the frontmatter, `## References`, or `## Referenced by`** —
+   the generator owns them; your edits will be overwritten and may corrupt the
+   map. `## Description` is the opposite: it is human-owned, never regenerated,
+   and carried with the alias — edit it only to genuinely improve the human
+   record, never to mechanically "sync" it with code. Correcting a description
+   your own change has just invalidated IS improving the record — do it, and
+   tell the human what you corrected.
 2. **Never delete or rewrite human content** — anything below the generated
    blocks, and any note *without* the `generated_by` marker (those are entirely
    hand-written documentation). This content carries decisions you cannot

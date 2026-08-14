@@ -12,7 +12,7 @@ A codebase carries two kinds of knowledge, and an agent working in it needs both
 
 **Intent** — which classes matter, what each one is for, why the design took this shape — is not in the source at all. No amount of crawling recovers it. It lives in the heads of the people who wrote the code.
 
-Etruscan puts both into one artifact. Structure is derived by static analysis, so it cannot lie and cannot drift. Intent is declared by humans: one attribute and one sentence per class. The artifact is plain markdown in your repo — diffed in PRs, reviewed like code, regenerated on demand.
+Etruscan puts both into one artifact. Structure is derived by static analysis, so it cannot lie and cannot drift. Intent is declared by humans: an attribute marks the class as worth knowing, and one sentence — written straight into the note, by you or an agent writing as you — says what it is for. The artifact is plain markdown in your repo — diffed in PRs, reviewed like code, regenerated on demand.
 
 The vault is the meeting point of human context and machine context. A person spends one sentence saying what a class is for; every agent that ever works in the repo reads that sentence for a handful of tokens instead of reconstructing an approximation from source. The map makes agents cheaper and sharper at once, and the human words on it survive every regeneration.
 
@@ -25,9 +25,6 @@ use WellDigit\Etruscan\Attributes\EtruscanNode;
 use WellDigit\Etruscan\Attributes\Vocabulary\EtruscanContext;
 use WellDigit\Etruscan\Attributes\Vocabulary\EtruscanLayer;
 
-/**
- * Creates a monitor for the account after guarding the plan cap.
- */
 #[EtruscanNode('monitor-create')]
 #[EtruscanLayer('action')]
 #[EtruscanContext('monitor')]
@@ -40,7 +37,7 @@ Run the projector:
 php artisan etruscan:generate
 ```
 
-Each node becomes one note:
+Each node becomes one note, with an empty `## Description` already waiting. That slot is the generator's only contribution to the section: it writes the heading, never the words. Fill it with the sentence that matters — it is the manual, human-written part of the map, and regeneration will never touch it.
 
 ```markdown
 ---
@@ -86,12 +83,14 @@ Declaration buys determinism.
 
 Regeneration follows fixed ownership rules. They are the human–agent contract, enforced mechanically:
 
-| Section                             | Owner                             | On regeneration                              |
-| ----------------------------------- | --------------------------------- | -------------------------------------------- |
-| Frontmatter (identity, axes)        | derived from code                 | always rewritten                             |
-| `## References`, `## Referenced by` | derived from code                 | always rewritten                             |
-| `## Description`                    | docblock if present, human otherwise | rewritten only when the class has a docblock |
-| Everything else in the note         | human — or an agent writing as one | never touched                                |
+| Section                             | Owner                              | On regeneration                   |
+| ----------------------------------- | ---------------------------------- | --------------------------------- |
+| Frontmatter (identity, axes)        | derived from code                  | always rewritten                  |
+| `## References`, `## Referenced by` | derived from code                  | always rewritten                  |
+| `## Description`                    | human — or an agent writing as one | heading seeded empty; the text never touched, carried by alias |
+| Everything else in the note         | human — or an agent writing as one | never touched                     |
+
+Generation seeds the empty `## Description` heading in every note — the slot is the standing invitation — but the words under it are only ever yours, keyed to the alias, the one permanent name. (Plain prose is tidy-wrapped to a readable width — the words never change; a description carrying its own formatting — lists, code fences, headings — passes through byte-for-byte.) Rewrite the class, swap the taxonomy, regroup the folders — the derived sections reshape around your sentence, and your sentence stays. Docblocks are code documentation and never flow into the vault: what the map says about a class is exactly what a human chose to say about it.
 
 A note whose class lost its `#[EtruscanNode]` is deleted only when it contains nothing of yours; otherwise it is kept and reported (`--purge` overrides). Hand-written notes without the generation marker are never touched. Manual text travels with its note when the folder layout changes.
 
@@ -103,9 +102,9 @@ This repository ships its own vault: [`.etruscan/`](.etruscan) is Etruscan's map
 
 1. **Read the map before crawling source.** Resolve the alias, read the note, follow the edges. Open the source file only when you need implementation detail — `source:` in the frontmatter is the exact path.
 2. **Use `## Referenced by` for impact analysis.** Before changing a class, the inbound edges tell you what breaks.
-3. **Treat human text as protected.** Anything outside the derived sections was written by a person and is the one part of the map you cannot reconstruct. Add below it; never rewrite it.
+3. **Treat human text as protected.** The `## Description` and everything below the derived sections was written by a person and is the one part of the map you cannot reconstruct. Deliberate improvement is welcome — correcting a description your own change has just invalidated counts, and deserves a mention to the human. Mechanical rewriting and "syncing with code" are not.
 4. **Never edit derived sections by hand.** Change the code or the attributes, then run `php artisan etruscan:generate`.
-5. **Keep the map complete.** A class without a node is invisible to retrieval. When you add a class that matters, annotate it and regenerate.
+5. **Keep the map complete.** A class without a node is invisible to retrieval. When you add a class that matters, annotate it, regenerate, and fill the empty `## Description` the generator seeds in the new note — as a human would.
 
 With [Laravel Boost](https://github.com/laravel/boost), the `etruscan-navigate` skill encodes 1–4, `etruscan-annotate` encodes 5, and the core guideline keeps regeneration part of your normal working loop. When the `etruscan` MCP server is connected, prefer its tools over raw file reads — `map-overview`, `search-map`, `lookup-node`, `trace-node` — one call each, measured so the team can improve the map (see below).
 
@@ -185,10 +184,11 @@ Relative paths resolve against the application root; absolute paths are used as-
 > project. Read the codebase, then propose the axis taxonomy (layer / domain /
 > context / …) and which classes deserve to be nodes — show me the plan as a
 > table before touching any files. Once I approve, apply the `#[EtruscanNode]`
-> and axis attributes, seed a one-line `## Description` where the intent is
-> clear from the code, and flag the classes whose *why* only I can explain.
+> and axis attributes, generate the vault, then fill each note's empty
+> `## Description` with a first pass where the intent is clear from the code,
+> and flag the classes whose *why* only I can explain.
 
-The agent proposes the schema, you review and tune it, then it writes the attributes across the codebase. Note the last clause of the prompt: the agent seeds what the code reveals and flags what it cannot know. The classes it flags are where your one sentence of intent is worth the most. (Already annotated by hand? Skip straight to step 3.)
+The agent proposes the schema, you review and tune it, then it writes the attributes across the codebase and seeds the notes. Note the last clause of the prompt: the descriptions are yours — the agent only ever writes them the way you would, into the notes, where regeneration never touches them. It seeds what the code reveals and flags what it cannot know; the classes it flags are where your one sentence of intent is worth the most. (Already annotated by hand? Skip straight to step 3.)
 
 **3. Generate the vault.**
 
@@ -198,6 +198,15 @@ php artisan etruscan:generate          # add --dry-run to preview first
 
 Browse `.etruscan/` in any editor, or render the graph with `php artisan etruscan:graph`. From here, the `etruscan-navigate` skill lets an agent read the map instead of crawling files.
 
+**4. Connect the map to your agent (MCP).**
+Using [Laravel Boost](https://github.com/laravel/boost)? **Nothing to do** — Etruscan exposes its four map tools inside the `laravel-boost` MCP server your agent already connects to; verify with `php artisan boost:mcp` being present in `.mcp.json`. Not using Boost? Add Etruscan's own server to your agent's MCP config:
+
+```json
+{ "mcpServers": { "etruscan": { "command": "php", "args": ["artisan", "etruscan:mcp"] } } }
+```
+
+Without either, agents still work — they read the vault files directly — but consultations are not measured.
+
 ## Command
 
 ```bash
@@ -206,7 +215,7 @@ php artisan etruscan:generate --dry-run           # report without writing
 php artisan etruscan:generate --group-by=domain        # per-run layout override
 php artisan etruscan:generate --group-by=layer,domain  # nested folders, one level per axis
 php artisan etruscan:generate --group-by=none          # force flat layout
-php artisan etruscan:generate --purge             # also delete orphans holding manual notes
+php artisan etruscan:generate --purge             # also delete orphans holding human words
 ```
 
 ## Configuration
@@ -219,7 +228,7 @@ php artisan etruscan:generate --purge             # also delete orphans holding 
 | `generated_marker` | —                                            | `generated_by`   | Frontmatter key marking generated notes                                                                     |
 | `generated_value`  | —                                            | `etruscan`       | Value stamped under the marker key                                                                          |
 | `vocabulary`       | —                                            | `[]`             | Optional allowed values per axis; `etruscan:check` flags off-vocabulary values (see below)                  |
-| `usage_tracking`   | `ETRUSCAN_USAGE_TRACKING`                    | `true`           | Record MCP map consultations to `{vault}/usage.jsonl` for `etruscan:usage`; local-only, never leaves the machine |
+| `usage_tracking`   | `ETRUSCAN_USAGE_TRACKING`                    | `true`           | Record MCP map consultations to `{vault}/.reports/usage.jsonl` for `etruscan:usage`; `.reports/` is git-ignored by default, so the log stays on this machine unless you deliberately commit it |
 
 Folder layout is a projection, not structure: `group_by` writes notes into `{vault}/{axisValue}/{alias}.md`, several keys nest folders in order, and a note missing an axis simply skips that level. Wikilinks are path-independent, so links keep working in any layout.
 
@@ -228,11 +237,11 @@ Folder layout is a projection, not structure: `group_by` writes notes into `{vau
 Render the whole node graph as a single self-contained HTML page — force-directed layout, node colors by any axis, search, and a per-node panel with description, metadata, and inbound/outbound references:
 
 ```bash
-php artisan etruscan:graph                                   # {vault}/graph.html
+php artisan etruscan:graph                                   # {vault}/.reports/graph.html
 php artisan etruscan:graph --output=public/codebase.html     # custom location
 ```
 
-The page embeds the graph data and has no external dependencies. Open it in any browser, online or offline, and share it with anyone — reading the map requires no repo access and no tooling.
+The page embeds the graph data and has no external dependencies. Open it in any browser, online or offline, and share it with anyone — reading the map requires no repo access and no tooling. Node descriptions on the page are read from the vault notes — their only home — so generate the vault before rendering the graph.
 
 ## Checking the map
 
@@ -273,7 +282,7 @@ Etruscan ships its own MCP server, so agents query the map through structured to
 | `lookup-node`  | "Tell me about this class" — the full note, ending with the source path to open    |
 | `trace-node`   | "What does it use / who uses it?" — one dependency hop with descriptions           |
 
-Connect it by adding the server to your agent's MCP config (for Claude Code, `.mcp.json` in the project root):
+**With Laravel Boost, connection is automatic**: Etruscan registers its tools in Boost's `boost.mcp.tools.include`, so they are served by the `laravel-boost` MCP server your agent already connects to — no `.mcp.json` change. Without Boost, add Etruscan's own server to your agent's MCP config (for Claude Code, `.mcp.json` in the project root):
 
 ```json
 {
@@ -283,26 +292,28 @@ Connect it by adding the server to your agent's MCP config (for Claude Code, `.m
 }
 ```
 
-or `claude mcp add etruscan -- php artisan etruscan:mcp`. The server reads the vault on disk, so regenerate after changing annotated classes and the tools answer from the fresh map.
+or `claude mcp add etruscan -- php artisan etruscan:mcp`. Either way the tools read the vault on disk, so regenerate after changing annotated classes and they answer from the fresh map.
 
 **Security posture:** the server speaks stdio only — it is not an HTTP route, opens no port, and runs solely when someone with shell access starts it. All four tools are read-only over the vault's markdown (aliases are looked up, never used as file paths), the only write is the local usage log, and the server is not registered at all when `APP_ENV=production`.
 
 ## Measuring usefulness
 
-Because agents reach the map through the MCP tools, usage is measured **server-side, as ground truth** — no honor system, no agent cooperation required. Every consultation is appended to `{vault}/usage.jsonl` (local-only; nothing ever leaves the machine), and:
+Because agents reach the map through the MCP tools, usage is measured **server-side, as ground truth** — no honor system, no agent cooperation required. Every consultation is appended to `{vault}/.reports/usage.jsonl` — and `.reports/` ships its own `.gitignore`, so the log never leaves your machine unless you deliberately commit it. Then:
 
 ```bash
 php artisan etruscan:usage             # the report
 php artisan etruscan:usage --days=7    # recent window
 php artisan etruscan:usage --json      # machine-readable, for CI or dashboards
-php artisan etruscan:usage --html      # self-contained dashboard → {vault}/usage.html (--output overrides)
+php artisan etruscan:usage --html      # self-contained dashboard → {vault}/.reports/usage.html (--output overrides)
 ```
 
 The `--html` dashboard is a single offline page like the graph view: stat cards, consultations per day with misses in red (watch them fall as you annotate), most-consulted nodes, and the annotation-candidate list — shareable with anyone, no tooling required.
 
-reports what the log proves: consultations per tool, the most-consulted nodes (the ones whose descriptions earn the most polish), and — the most valuable signal — **misses**: the exact aliases and queries agents asked for that the map could not answer. Misses are pre-validated annotation candidates; feed them to the `etruscan-annotate` skill and watch them disappear from the next report. That trend — miss velocity falling toward zero — is the honest benchmark of the map paying off.
+The report shows what the log proves: consultations per tool, the most-consulted nodes (the ones whose descriptions earn the most polish), and — the most valuable signal — **misses**: the exact aliases and queries agents asked for that the map could not answer. Misses are pre-validated annotation candidates; feed them to the `etruscan-annotate` skill and watch them disappear from the next report. That trend — miss velocity falling toward zero — is the honest benchmark of the map paying off.
 
-What this measures: every consultation through the MCP tools. What it cannot see: agents reading vault files directly (the skills steer them to the tools for exactly this reason). Disable recording with `ETRUSCAN_USAGE_TRACKING=false`; the tools keep answering either way. If you commit the log for a shared team view, add `.etruscan/usage.jsonl merge=union` to `.gitattributes` so parallel branches merge cleanly — or gitignore it for per-machine stats.
+The report also totals the context the map actually served: characters per consultation, summed and shown as an estimated token count (~4 chars/token — an estimate, since every agent tokenizes differently). It measures what the map delivered, not the agent's total context, but it makes the trade concrete: a few hundred tokens of curated map instead of the file-globbing round-trips it replaced.
+
+What this measures: every consultation through the MCP tools. What it cannot see: agents reading vault files directly (the skills steer them to the tools for exactly this reason). Disable recording with `ETRUSCAN_USAGE_TRACKING=false`; the tools keep answering either way. For a shared team log, edit `.etruscan/.reports/.gitignore` to un-ignore `usage.jsonl` (edit it — a deleted file is reseeded) and add `.etruscan/.reports/usage.jsonl merge=union` to `.gitattributes` so parallel branches merge cleanly.
 
 ## Development
 
