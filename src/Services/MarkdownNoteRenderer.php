@@ -7,8 +7,9 @@ namespace WellDigit\Etruscan\Services;
 use WellDigit\Etruscan\Attributes\EtruscanNode;
 use WellDigit\Etruscan\Attributes\Vocabulary\EtruscanContext;
 use WellDigit\Etruscan\Attributes\Vocabulary\EtruscanLayer;
-use WellDigit\Etruscan\Enums\GeneratedNoteSection;
+use WellDigit\Etruscan\Enums\NoteSection;
 use WellDigit\Etruscan\Payloads\NoteContent;
+use WellDigit\Etruscan\Utilities\BlankLineTrimmer;
 
 #[EtruscanNode('markdown-note-renderer')]
 #[EtruscanLayer('service')]
@@ -17,6 +18,13 @@ final readonly class MarkdownNoteRenderer
 {
     private const int DESCRIPTION_WIDTH = 100;
 
+    /**
+     * The Description section is human-owned: generation always seeds its heading —
+     * an empty slot inviting the human words — but the text under it is only ever
+     * carried over from the existing note (keyed by alias), never derived or rewritten.
+     * Plain prose is tidy-wrapped to a readable width; text carrying its own
+     * formatting passes through byte-for-byte (see wrapDescription).
+     */
     public function __invoke(NoteContent $noteContent, string $markerKey, string $markerValue, string $manualContent = '', string $carriedDescription = ''): string
     {
         $frontmatter = $noteContent->frontmatter;
@@ -41,19 +49,18 @@ final readonly class MarkdownNoteRenderer
         $lines[] = '---';
         $lines[] = '';
 
-        $description = $noteContent->description !== null && $noteContent->description !== ''
-            ? $noteContent->description
-            : trim($carriedDescription);
+        $description = BlankLineTrimmer::trim($carriedDescription);
+
+        $lines[] = NoteSection::Description->heading();
+        $lines[] = '';
 
         if ($description !== '') {
-            $lines[] = GeneratedNoteSection::Description->heading();
-            $lines[] = '';
             $lines[] = $this->wrapDescription($description);
             $lines[] = '';
         }
 
         if ($noteContent->links !== []) {
-            $lines[] = GeneratedNoteSection::References->heading();
+            $lines[] = NoteSection::References->heading();
             $lines[] = '';
 
             foreach ($noteContent->links as $link) {
@@ -64,7 +71,7 @@ final readonly class MarkdownNoteRenderer
         }
 
         if ($noteContent->referencedBy !== []) {
-            $lines[] = GeneratedNoteSection::ReferencedBy->heading();
+            $lines[] = NoteSection::ReferencedBy->heading();
             $lines[] = '';
 
             foreach ($noteContent->referencedBy as $referrer) {
@@ -74,22 +81,32 @@ final readonly class MarkdownNoteRenderer
 
         $markdown = rtrim(implode("\n", $lines))."\n";
 
-        if (trim($manualContent) !== '') {
-            $markdown .= "\n".trim($manualContent)."\n";
+        $manual = BlankLineTrimmer::trim($manualContent);
+
+        if ($manual !== '') {
+            $markdown .= "\n".$manual."\n";
         }
 
         return $markdown;
     }
 
     /**
-     * Reflows the description as prose: each blank-line-separated paragraph is
-     * collapsed to a single logical line and re-wrapped, so hand-edits produce
-     * clean, even lines instead of freezing an earlier wrap. Paragraph breaks
-     * survive; content needing exact line control belongs in manual notes.
+     * A description that carries its own structure — lists, code fences, headings,
+     * quotes, tables, indentation — is the human's formatting and passes through
+     * byte-for-byte, first line included: the edges are trimmed by line, never by
+     * character, so an indented opening stays indented. Only pure prose is reflowed:
+     * each blank-line-separated paragraph collapses to a logical line and re-wraps
+     * into clean, even lines. Both paths are idempotent across regenerations.
      */
     private function wrapDescription(string $description): string
     {
-        $paragraphs = preg_split('/\R{2,}/', trim($description)) ?: [];
+        $description = BlankLineTrimmer::trim($description);
+
+        if ($this->hasStructuredLines($description)) {
+            return implode("\n", array_map(rtrim(...), preg_split('/\R/', $description) ?: []));
+        }
+
+        $paragraphs = preg_split('/\R{2,}/', $description) ?: [];
 
         $wrapped = array_map(
             fn (string $paragraph): string => wordwrap(
@@ -102,6 +119,27 @@ final readonly class MarkdownNoteRenderer
         );
 
         return implode("\n\n", $wrapped);
+    }
+
+    private function hasStructuredLines(string $description): bool
+    {
+        foreach (preg_split('/\R/', $description) ?: [] as $line) {
+            $unindented = ltrim($line);
+
+            if ($unindented === '') {
+                continue;
+            }
+
+            if ($unindented !== $line) {
+                return true;
+            }
+
+            if (preg_match('/^(```|~~~|[-*+] |#|>|\||\d+[.)] )/', $unindented) === 1) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private function renderScalar(string $value): string

@@ -9,7 +9,11 @@ use WellDigit\Etruscan\Payloads\NoteContent;
 use WellDigit\Etruscan\Payloads\ScannedClass;
 use WellDigit\Etruscan\Services\NodeGraphBuilder;
 
-function scannedNode(string $fqcn, ?string $alias, array $axes = [], array $references = [], ?string $extendsFqcn = null, ?string $description = null): ScannedClass
+/**
+ * @param  array<string, list<string>>  $axes
+ * @param  list<string>  $references
+ */
+function scannedNode(string $fqcn, ?string $alias, array $axes = [], array $references = [], ?string $extendsFqcn = null): ScannedClass
 {
     return new ScannedClass(
         fqcn: $fqcn,
@@ -18,7 +22,6 @@ function scannedNode(string $fqcn, ?string $alias, array $axes = [], array $refe
         sourcePath: '/src/'.str_replace('\\', '/', $fqcn).'.php',
         alias: $alias,
         extendsFqcn: $extendsFqcn,
-        description: $description,
     );
 }
 
@@ -54,7 +57,8 @@ test('each node lists the nodes that reference it, sorted, under referencedBy', 
         scannedNode(fqcn: 'App\\Team', alias: 'team'),
     ]);
 
-    $byAlias = collect($notes)->keyBy('alias');
+    /** @var array<string, NoteContent> $byAlias */
+    $byAlias = collect($notes)->keyBy('alias')->all();
 
     expect($byAlias['team']->referencedBy)->toBe(['incident', 'monitor'])   // both referrers, sorted
         ->and($byAlias['team']->links)->toBe([])                            // team references nothing
@@ -117,11 +121,11 @@ test('a source path inside the current working directory becomes relative', func
     expect($notes[0]->frontmatter['source'])->toBe('src/App/Monitor.php');
 });
 
-test('the docblock summary travels into the note as its description', function () {
+test('vault descriptions attach to notes by alias — the note is their only source', function () {
     $notes = (new NodeGraphBuilder)([
-        scannedNode(fqcn: 'App\\Monitor', alias: 'monitor', description: 'Watches endpoints for downtime.'),
+        scannedNode(fqcn: 'App\\Monitor', alias: 'monitor'),
         scannedNode(fqcn: 'App\\Team', alias: 'team'),
-    ]);
+    ], ['monitor' => 'Watches endpoints for downtime.']);
 
     expect($notes[0]->description)->toBe('Watches endpoints for downtime.')
         ->and($notes[1]->description)->toBeNull();

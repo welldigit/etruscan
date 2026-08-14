@@ -8,10 +8,15 @@ use WellDigit\Etruscan\Attributes\EtruscanNode;
 use WellDigit\Etruscan\Attributes\Vocabulary\EtruscanContext;
 use WellDigit\Etruscan\Attributes\Vocabulary\EtruscanLayer;
 
-#[EtruscanNode('generated-note-section')]
+/**
+ * The structured sections a note is parsed and rendered by. References and
+ * Referenced by are derived from code and rewritten on every generation;
+ * Description is human-written and only ever carried, never rewritten.
+ */
+#[EtruscanNode('note-section')]
 #[EtruscanLayer('enum')]
 #[EtruscanContext('projection')]
-enum GeneratedNoteSection: string
+enum NoteSection: string
 {
     case Description = 'Description';
     case References = 'References';

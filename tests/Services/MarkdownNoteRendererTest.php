@@ -25,6 +25,8 @@ test('it renders frontmatter, the generation marker and wikilink references', fu
         'ci-generated: barkme',
         '---',
         '',
+        '## Description',
+        '',
         '## References',
         '',
         '- [[monitor]]',
@@ -49,7 +51,7 @@ test('a note without links omits the references section entirely', function () {
 
     $markdown = (new MarkdownNoteRenderer)(noteContent: $noteContent, markerKey: 'ci', markerValue: 'x');
 
-    expect($markdown)->toBe("---\nalias: leaf\nci: x\n---\n")
+    expect($markdown)->toBe("---\nalias: leaf\nci: x\n---\n\n## Description\n")
         ->and($markdown)->not->toContain('## References');
 });
 
@@ -58,10 +60,14 @@ test('a description renders as its own section above the references', function (
         alias: 'monitor',
         frontmatter: ['alias' => 'monitor'],
         links: ['team'],
-        description: 'Watches endpoints for downtime.',
     );
 
-    $markdown = (new MarkdownNoteRenderer)(noteContent: $noteContent, markerKey: 'ci', markerValue: 'x');
+    $markdown = (new MarkdownNoteRenderer)(
+        noteContent: $noteContent,
+        markerKey: 'ci',
+        markerValue: 'x',
+        carriedDescription: 'Watches endpoints for downtime.',
+    );
 
     expect($markdown)->toBe(implode("\n", [
         '---',
@@ -106,21 +112,22 @@ test('a note with no inbound links omits the Referenced by section', function ()
         ->and($markdown)->not->toContain('## Referenced by');
 });
 
-test('a note without a description omits the section entirely', function () {
-    $noteContent = new NoteContent(alias: 'leaf', frontmatter: ['alias' => 'leaf'], links: []);
+test('a note without a description still gets the empty section — the slot to fill', function () {
+    $noteContent = new NoteContent(alias: 'leaf', frontmatter: ['alias' => 'leaf'], links: ['root']);
 
     $markdown = (new MarkdownNoteRenderer)(noteContent: $noteContent, markerKey: 'ci', markerValue: 'x');
 
-    expect($markdown)->not->toContain('## Description');
+    expect($markdown)->toContain("## Description\n\n## References");
 });
 
 test('a long single-line description is wrapped into readable lines without losing a word', function () {
     $sentence = trim(str_repeat('lorem ipsum dolor sit amet ', 12)); // one line, well over 100 chars
 
     $markdown = (new MarkdownNoteRenderer)(
-        noteContent: new NoteContent(alias: 'wide', frontmatter: ['alias' => 'wide'], links: [], description: $sentence),
+        noteContent: new NoteContent(alias: 'wide', frontmatter: ['alias' => 'wide'], links: []),
         markerKey: 'ci',
         markerValue: 'x',
+        carriedDescription: $sentence,
     );
 
     $descriptionBlock = trim(explode("\n\n## References", explode("## Description\n\n", $markdown)[1])[0]);
@@ -136,9 +143,10 @@ test('an unevenly hand-wrapped description is reflowed into clean, even lines', 
     $ragged = "Owns the write-and-sweep\ncycle: rewrites generated\nnotes, carries manual content across regenerations and folder moves, and prunes empty folders.";
 
     $markdown = (new MarkdownNoteRenderer)(
-        noteContent: new NoteContent(alias: 'x', frontmatter: ['alias' => 'x'], links: [], description: $ragged),
+        noteContent: new NoteContent(alias: 'x', frontmatter: ['alias' => 'x'], links: []),
         markerKey: 'ci',
         markerValue: 'x',
+        carriedDescription: $ragged,
     );
 
     $descriptionBlock = trim(explode("## Description\n\n", $markdown)[1]);
@@ -154,19 +162,67 @@ test('paragraph breaks in a description are preserved through reflow', function 
     $twoParagraphs = "First paragraph, short.\n\nSecond paragraph, also short.";
 
     $markdown = (new MarkdownNoteRenderer)(
-        noteContent: new NoteContent(alias: 'x', frontmatter: ['alias' => 'x'], links: [], description: $twoParagraphs),
+        noteContent: new NoteContent(alias: 'x', frontmatter: ['alias' => 'x'], links: []),
         markerKey: 'ci',
         markerValue: 'x',
+        carriedDescription: $twoParagraphs,
     );
 
     expect($markdown)->toContain("## Description\n\nFirst paragraph, short.\n\nSecond paragraph, also short.\n");
 });
 
-test('a description already within the width is left on its own line', function () {
+test('a bulleted list in a description is carried byte-for-byte, never reflowed', function () {
+    $withList = "Enforces the plan cap:\n- guards the quota\n- rejects overdraft\n- logs the refusal";
+
     $markdown = (new MarkdownNoteRenderer)(
-        noteContent: new NoteContent(alias: 'narrow', frontmatter: ['alias' => 'narrow'], links: [], description: 'Short and sweet.'),
+        noteContent: new NoteContent(alias: 'x', frontmatter: ['alias' => 'x'], links: []),
         markerKey: 'ci',
         markerValue: 'x',
+        carriedDescription: $withList,
+    );
+
+    expect($markdown)->toContain("## Description\n\n".$withList."\n");
+});
+
+test('a code fence in a description survives regeneration untouched', function () {
+    $withFence = "Emits one JSON line per event:\n\n```\n{\"status\": \"ok\"}\n\n{\"status\": \"miss\"}\n```\n\nBest-effort by design.";
+
+    $markdown = (new MarkdownNoteRenderer)(
+        noteContent: new NoteContent(alias: 'x', frontmatter: ['alias' => 'x'], links: []),
+        markerKey: 'ci',
+        markerValue: 'x',
+        carriedDescription: $withFence,
+    );
+
+    expect($markdown)->toContain("## Description\n\n".$withFence."\n");
+});
+
+test('a structured description is idempotent across renders, even with a ragged prose paragraph', function () {
+    // the long prose line would normally reflow — the list opts the whole text out
+    $structured = 'A very long opening sentence that runs well past the hundred column mark and would otherwise be rewrapped by the prose path. '
+        ."Key rules:\n1. first rule\n2. second rule";
+
+    $markdownNoteRenderer = new MarkdownNoteRenderer;
+    $render = fn (string $description): string => $markdownNoteRenderer(
+        noteContent: new NoteContent(alias: 'x', frontmatter: ['alias' => 'x'], links: []),
+        markerKey: 'ci',
+        markerValue: 'x',
+        carriedDescription: $description,
+    );
+
+    $first = $render($structured);
+    $body = trim(explode('## Description', $first)[1]);
+
+    expect($first)->toContain("1. first rule\n2. second rule")
+        ->and($render($body))->toBe($first);
+});
+
+test('a description already within the width is left on its own line', function () {
+    $markdown = (new MarkdownNoteRenderer)(
+        noteContent: new NoteContent(alias: 'narrow', frontmatter: ['alias' => 'narrow'], links: []),
+        markerKey: 'ci',
+        markerValue: 'x',
+        carriedDescription: 'Short and sweet.',
     );
 
     expect($markdown)->toContain("## Description\n\nShort and sweet.\n");
@@ -195,7 +251,7 @@ test('blank manual content adds nothing', function () {
         manualContent: "  \n\n",
     );
 
-    expect($markdown)->toBe("---\nalias: leaf\nci: x\n---\n");
+    expect($markdown)->toBe("---\nalias: leaf\nci: x\n---\n\n## Description\n");
 });
 
 test('ambiguous YAML scalars are quoted and escaped', function () {
@@ -228,26 +284,16 @@ test('plain slug values stay unquoted', function () {
         ->not->toContain('"plain-slug_1"');
 });
 
-test('the carried description is rendered only when the class provides none', function () {
-    $noteContent = new NoteContent(alias: 'alpha', frontmatter: ['alias' => 'alpha'], links: []);
-
+test('the description is only ever the carried human text — nothing code-side can override it', function () {
     $withCarried = (new MarkdownNoteRenderer)(
-        noteContent: $noteContent,
-        markerKey: 'ci',
-        markerValue: 'x',
-        carriedDescription: 'Human words.',
-    );
-
-    $withBoth = (new MarkdownNoteRenderer)(
-        noteContent: new NoteContent(alias: 'alpha', frontmatter: ['alias' => 'alpha'], links: [], description: 'Docblock words.'),
+        noteContent: new NoteContent(alias: 'alpha', frontmatter: ['alias' => 'alpha'], links: [], description: 'Code-derived words.'),
         markerKey: 'ci',
         markerValue: 'x',
         carriedDescription: 'Human words.',
     );
 
     expect($withCarried)->toContain("## Description\n\nHuman words.")
-        ->and($withBoth)->toContain('Docblock words.')
-        ->and($withBoth)->not->toContain('Human words.');
+        ->and($withCarried)->not->toContain('Code-derived words.');
 });
 
 test('the output is deterministic for identical input', function () {
@@ -261,4 +307,39 @@ test('the output is deterministic for identical input', function () {
 
     expect($markdownNoteRenderer(noteContent: $noteContent, markerKey: 'ci', markerValue: 'x'))
         ->toBe($markdownNoteRenderer(noteContent: $noteContent, markerKey: 'ci', markerValue: 'x'));
+});
+
+test('an indented opening line keeps its indentation — the edges are trimmed by line, not by character', function () {
+    $indentedBlock = "    \$config = [\n        'retries' => 3,\n    ];";
+
+    $markdown = (new MarkdownNoteRenderer)(
+        noteContent: new NoteContent(alias: 'x', frontmatter: ['alias' => 'x'], links: []),
+        markerKey: 'ci',
+        markerValue: 'x',
+        carriedDescription: $indentedBlock,
+    );
+
+    expect($markdown)->toContain("## Description\n\n".$indentedBlock."\n");
+});
+
+test('blank lines around a description are trimmed without eating the first line indentation', function () {
+    $markdown = (new MarkdownNoteRenderer)(
+        noteContent: new NoteContent(alias: 'x', frontmatter: ['alias' => 'x'], links: []),
+        markerKey: 'ci',
+        markerValue: 'x',
+        carriedDescription: "\n\n  - nested opening\n  - and its sibling\n\n",
+    );
+
+    expect($markdown)->toContain("## Description\n\n  - nested opening\n  - and its sibling\n");
+});
+
+test('manual content keeps the indentation of its opening line too', function () {
+    $markdown = (new MarkdownNoteRenderer)(
+        noteContent: new NoteContent(alias: 'x', frontmatter: ['alias' => 'x'], links: []),
+        markerKey: 'ci',
+        markerValue: 'x',
+        manualContent: "    first, indented\n    second, indented\n",
+    );
+
+    expect($markdown)->toEndWith("\n    first, indented\n    second, indented\n");
 });

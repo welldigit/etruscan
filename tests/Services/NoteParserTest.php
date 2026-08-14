@@ -89,3 +89,21 @@ test('unclosed frontmatter is treated as frontmatter with an empty body', functi
         ->and($parsedNote->frontmatter)->toHaveKey('generated_by')
         ->and($parsedNote->manual)->toBe('');
 });
+
+test('the indentation of a description opening line survives parsing', function () {
+    $parsedNote = (new NoteParser)(implode("\n", [
+        '---',
+        'alias: x',
+        'generated_by: etruscan',
+        '---',
+        '',
+        '## Description',
+        '',
+        '    $config = [',
+        "        'retries' => 3,",
+        '    ];',
+        '',
+    ]));
+
+    expect($parsedNote->description)->toBe("    \$config = [\n        'retries' => 3,\n    ];");
+});

@@ -20,9 +20,11 @@ final readonly class NodeGraphBuilder
 {
     /**
      * @param  list<ScannedClass>  $scannedClasses
+     * @param  array<string, string>  $descriptionsByAlias  Human-written descriptions read from the vault,
+     *                                                      keyed by alias — the notes are their only source.
      * @return list<NoteContent>
      */
-    public function __invoke(array $scannedClasses): array
+    public function __invoke(array $scannedClasses, array $descriptionsByAlias = []): array
     {
         $aliasByFqcn = $this->mapAliasesByFqcn($scannedClasses);
 
@@ -46,7 +48,7 @@ final readonly class NodeGraphBuilder
                 frontmatter: $this->buildFrontmatter($node),
                 links: $linksByAlias[$alias],
                 referencedBy: $referencedByAlias[$alias] ?? [],
-                description: $node->description,
+                description: $descriptionsByAlias[$alias] ?? null,
             );
         }
 

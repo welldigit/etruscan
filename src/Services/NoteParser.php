@@ -7,9 +7,10 @@ namespace WellDigit\Etruscan\Services;
 use WellDigit\Etruscan\Attributes\EtruscanNode;
 use WellDigit\Etruscan\Attributes\Vocabulary\EtruscanContext;
 use WellDigit\Etruscan\Attributes\Vocabulary\EtruscanLayer;
-use WellDigit\Etruscan\Enums\GeneratedNoteSection;
 use WellDigit\Etruscan\Enums\IdentityFrontmatterKey;
+use WellDigit\Etruscan\Enums\NoteSection;
 use WellDigit\Etruscan\Payloads\ParsedNote;
+use WellDigit\Etruscan\Utilities\BlankLineTrimmer;
 
 #[EtruscanNode('note-parser')]
 #[EtruscanLayer('service')]
@@ -96,25 +97,25 @@ final readonly class NoteParser
                 continue;
             }
 
-            if ($trimmed === GeneratedNoteSection::Description->heading()) {
-                $section = GeneratedNoteSection::Description;
+            if ($trimmed === NoteSection::Description->heading()) {
+                $section = NoteSection::Description;
 
                 continue;
             }
 
-            if ($trimmed === GeneratedNoteSection::References->heading()) {
-                $section = GeneratedNoteSection::References;
+            if ($trimmed === NoteSection::References->heading()) {
+                $section = NoteSection::References;
 
                 continue;
             }
 
-            if ($trimmed === GeneratedNoteSection::ReferencedBy->heading()) {
-                $section = GeneratedNoteSection::ReferencedBy;
+            if ($trimmed === NoteSection::ReferencedBy->heading()) {
+                $section = NoteSection::ReferencedBy;
 
                 continue;
             }
 
-            if ($section === GeneratedNoteSection::Description) {
+            if ($section === NoteSection::Description) {
                 if (str_starts_with($trimmed, '## ')) {
                     $section = null;
                 } else {
@@ -124,14 +125,14 @@ final readonly class NoteParser
                 }
             }
 
-            if ($section === GeneratedNoteSection::References || $section === GeneratedNoteSection::ReferencedBy) {
+            if ($section === NoteSection::References || $section === NoteSection::ReferencedBy) {
                 if ($trimmed === '') {
                     continue;
                 }
 
                 if (str_starts_with($trimmed, '- [[')) {
                     if (preg_match('/^- \[\[([^\]]+)\]\]$/', $trimmed, $matches) === 1) {
-                        if ($section === GeneratedNoteSection::References) {
+                        if ($section === NoteSection::References) {
                             $links[] = $matches[1];
                         } else {
                             $referencedBy[] = $matches[1];
@@ -148,8 +149,8 @@ final readonly class NoteParser
         }
 
         return [
-            'description' => trim(implode("\n", $descriptionLines)),
-            'manual' => trim(implode("\n", $manualLines)),
+            'description' => BlankLineTrimmer::trim(implode("\n", $descriptionLines)),
+            'manual' => BlankLineTrimmer::trim(implode("\n", $manualLines)),
             'links' => $links,
             'referencedBy' => $referencedBy,
         ];

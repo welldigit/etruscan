@@ -49,8 +49,7 @@ test('it scans a class with a node attribute, axes and references', function () 
         ])
         ->and($class->references)->toContain('Fixture\Inventory\Helper')
         ->and($class->sourcePath)->toEndWith('Alpha.php')
-        ->and($class->extendsFqcn)->toBeNull()
-        ->and($class->description)->toBeNull();
+        ->and($class->extendsFqcn)->toBeNull();
 });
 
 test('same-namespace usages are collected as references without an import', function () {
@@ -79,7 +78,7 @@ test('same-namespace usages are collected as references without an import', func
         ->toContain('Fixture\Inventory\Product');
 });
 
-test('the docblock summary is captured as one plain-text paragraph', function () {
+test('a docblock is code documentation, not map input — the scan ignores it', function () {
     File::put($this->fixtureDirectory.'/Documented.php', <<<'PHP'
         <?php
 
@@ -88,12 +87,8 @@ test('the docblock summary is captured as one plain-text paragraph', function ()
         use WellDigit\Etruscan\Attributes\EtruscanNode;
 
         /**
-         * Projects notes onto disk idempotently, treating the vault as derived
-         * but the human's words as precious — see {@see Helper} for details.
-         *
-         * A second paragraph that must not leak into the summary.
-         *
-         * @see Helper
+         * A summary that must never leak into the vault: descriptions are
+         * human-written in the note, not harvested from source.
          */
         #[EtruscanNode('fixture-documented')]
         final class Documented {}
@@ -101,29 +96,9 @@ test('the docblock summary is captured as one plain-text paragraph', function ()
 
     $scanned = app(CodebaseScanner::class)([$this->fixtureDirectory]);
 
-    expect($scanned[0]->description)->toBe(
-        "Projects notes onto disk idempotently, treating the vault as derived but the human's words as precious — see Helper for details.",
-    );
-});
-
-test('a docblock holding only tags yields no description', function () {
-    File::put($this->fixtureDirectory.'/TagsOnly.php', <<<'PHP'
-        <?php
-
-        namespace Fixture\Inventory;
-
-        use WellDigit\Etruscan\Attributes\EtruscanNode;
-
-        /**
-         * @property string $name
-         */
-        #[EtruscanNode('fixture-tags-only')]
-        final class TagsOnly {}
-        PHP);
-
-    $scanned = app(CodebaseScanner::class)([$this->fixtureDirectory]);
-
-    expect($scanned[0]->description)->toBeNull();
+    // The docblock is simply not collected: ScannedClass has no description
+    // property at all, so there is no channel for code to reach the vault.
+    expect($scanned[0]->alias)->toBe('fixture-documented');
 });
 
 test('the parent class is captured as a resolved fqcn', function () {

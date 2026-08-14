@@ -245,43 +245,37 @@ test('manual content added to an existing note survives regeneration', function 
         ->and(File::get($this->vaultPath.'/alpha.md'))->toContain('My hard-won insight.');
 });
 
-test('only the generated blocks are rewritten; user sections and text are kept', function () {
-    $noteContent = new NoteContent(
-        alias: 'alpha',
-        frontmatter: ['alias' => 'alpha'],
-        links: ['beta'],
-        description: 'Original description.',
-    );
-    $notePathResolver = new NotePathResolver(groupByAxisKeys: []);
-    $vaultWriter = app(VaultWriter::class);
+test('only the generated blocks are rewritten; the human description and notes are kept', function () {
+    File::ensureDirectoryExists($this->vaultPath);
+    File::put($this->vaultPath.'/alpha.md', implode("\n", [
+        '---',
+        'alias: alpha',
+        'ci-generated: barkme',
+        '---',
+        '',
+        '## Description',
+        '',
+        'A human description that regeneration must not touch.',
+        '',
+        '## References',
+        '',
+        '- [[beta]]',
+        '',
+        '## My analysis',
+        '',
+        'This class is load-bearing.',
+    ])."\n");
 
-    $vaultWriter(
+    app(VaultWriter::class)(
         vaultPath: $this->vaultPath,
-        notes: [$noteContent],
-        notePathResolver: $notePathResolver,
-        markerKey: 'ci-generated',
-        markerValue: 'barkme',
-    );
-    File::append($this->vaultPath.'/alpha.md', "\n## My analysis\n\nThis class is load-bearing.\n");
-
-    $updatedNoteContent = new NoteContent(
-        alias: 'alpha',
-        frontmatter: ['alias' => 'alpha'],
-        links: ['gamma'],
-        description: 'Fresh description from the docblock.',
-    );
-
-    $vaultWriter(
-        vaultPath: $this->vaultPath,
-        notes: [$updatedNoteContent],
-        notePathResolver: $notePathResolver,
+        notes: [new NoteContent(alias: 'alpha', frontmatter: ['alias' => 'alpha'], links: ['gamma'])],
+        notePathResolver: new NotePathResolver(groupByAxisKeys: []),
         markerKey: 'ci-generated',
         markerValue: 'barkme',
     );
     $content = File::get($this->vaultPath.'/alpha.md');
 
-    expect($content)->toContain('Fresh description from the docblock.')
-        ->and($content)->not->toContain('Original description.')
+    expect($content)->toContain('A human description that regeneration must not touch.')
         ->and($content)->toContain('- [[gamma]]')
         ->and($content)->not->toContain('- [[beta]]')
         ->and($content)->toContain("## My analysis\n\nThis class is load-bearing.");
@@ -388,7 +382,7 @@ test('a long one-line human description is wrapped on write and then stays stabl
         ->and(File::get($this->vaultPath.'/alpha.md'))->toBe($wrapped); // second run is idempotent
 });
 
-test('a docblock description wins over a human-edited description section', function () {
+test('nothing code-side can overwrite a human description', function () {
     File::ensureDirectoryExists($this->vaultPath);
     File::put($this->vaultPath.'/alpha.md', implode("\n", [
         '---',
@@ -403,7 +397,7 @@ test('a docblock description wins over a human-edited description section', func
 
     app(VaultWriter::class)(
         vaultPath: $this->vaultPath,
-        notes: [new NoteContent(alias: 'alpha', frontmatter: ['alias' => 'alpha'], links: [], description: 'The docblock truth.')],
+        notes: [new NoteContent(alias: 'alpha', frontmatter: ['alias' => 'alpha'], links: [], description: 'Code-derived words.')],
         notePathResolver: new NotePathResolver(groupByAxisKeys: []),
         markerKey: 'ci-generated',
         markerValue: 'barkme',
@@ -411,8 +405,8 @@ test('a docblock description wins over a human-edited description section', func
 
     $content = File::get($this->vaultPath.'/alpha.md');
 
-    expect($content)->toContain('The docblock truth.')
-        ->and($content)->not->toContain('Hand-tuned description.');
+    expect($content)->toContain('Hand-tuned description.')
+        ->and($content)->not->toContain('Code-derived words.');
 });
 
 test('an orphan whose only human content is its description is kept and reported', function () {
@@ -538,4 +532,43 @@ test('purging deletes orphaned generated notes even when they carry manual notes
 
     expect($result)->toBe(['written' => 0, 'removed' => 1, 'orphaned' => []])
         ->and(File::exists($this->vaultPath.'/gone.md'))->toBeFalse();
+});
+
+test('a hand-indented code block in a description survives regeneration byte-for-byte', function () {
+    File::ensureDirectoryExists($this->vaultPath);
+
+    $note = implode("\n", [
+        '---',
+        'alias: alpha',
+        'ci-generated: barkme',
+        '---',
+        '',
+        '## Description',
+        '',
+        '    $config = [',
+        "        'retries' => 3,",
+        '    ];',
+        '',
+        '## References',
+        '',
+        '- [[beta]]',
+    ])."\n";
+
+    File::put($this->vaultPath.'/alpha.md', $note);
+
+    $regenerate = fn () => app(VaultWriter::class)(
+        vaultPath: $this->vaultPath,
+        notes: [new NoteContent(alias: 'alpha', frontmatter: ['alias' => 'alpha'], links: ['beta'])],
+        notePathResolver: new NotePathResolver(groupByAxisKeys: []),
+        markerKey: 'ci-generated',
+        markerValue: 'barkme',
+    );
+
+    $regenerate();
+    $afterFirst = File::get($this->vaultPath.'/alpha.md');
+
+    $regenerate();
+
+    expect($afterFirst)->toBe($note)
+        ->and(File::get($this->vaultPath.'/alpha.md'))->toBe($note);
 });

@@ -20,7 +20,6 @@ final readonly class ScannedClass
      * @param  string  $sourcePath  Absolute path to the source file.
      * @param  string|null  $alias  Node alias, or null when the class carries no #[EtruscanNode].
      * @param  string|null  $extendsFqcn  Parent class FQCN, if any.
-     * @param  string|null  $description  Docblock summary, if any.
      */
     public function __construct(
         public string $fqcn,
@@ -29,7 +28,6 @@ final readonly class ScannedClass
         public string $sourcePath,
         public ?string $alias = null,
         public ?string $extendsFqcn = null,
-        public ?string $description = null,
     ) {}
 
     public function isNode(): bool

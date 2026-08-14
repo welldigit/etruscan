@@ -109,7 +109,6 @@ final readonly class CodebaseScanner
             sourcePath: $path,
             alias: $alias,
             extendsFqcn: $classFact['extends'],
-            description: $classFact['description'],
         );
     }
 }

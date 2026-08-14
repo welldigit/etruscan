@@ -18,7 +18,9 @@ final readonly class NoteContent
      * @param  array<string, string|list<string>>  $frontmatter  YAML properties.
      * @param  list<string>  $links  Aliases of nodes this one references (outbound).
      * @param  list<string>  $referencedBy  Aliases of nodes that reference this one (inbound).
-     * @param  string|null  $description  Rendered as the Description section, if any.
+     * @param  string|null  $description  The note's human-written description, when known (read from the
+     *                                    vault for graph rendering). Never derived from code — the
+     *                                    Description section belongs to the note and its human author.
      */
     public function __construct(
         public string $alias,

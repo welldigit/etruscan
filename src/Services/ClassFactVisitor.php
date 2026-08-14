@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace WellDigit\Etruscan\Services;
 
-use PhpParser\Comment\Doc;
 use PhpParser\Node;
 use PhpParser\Node\Attribute;
 use PhpParser\Node\Name;
@@ -20,7 +19,7 @@ use WellDigit\Etruscan\Attributes\Vocabulary\EtruscanContext;
 use WellDigit\Etruscan\Attributes\Vocabulary\EtruscanLayer;
 
 /**
- * @phpstan-type ClassFact array{fqcn: string, extends: string|null, description: string|null, attributes: list<array{fqcn: string, args: list<string>}>}
+ * @phpstan-type ClassFact array{fqcn: string, extends: string|null, attributes: list<array{fqcn: string, args: list<string>}>}
  */
 #[EtruscanNode('class-fact-visitor')]
 #[EtruscanLayer('visitor')]
@@ -107,7 +106,6 @@ final class ClassFactVisitor extends NodeVisitorAbstract
             'extends' => $node instanceof Class_ && $node->extends instanceof Name
                 ? $this->resolveName($node->extends)
                 : null,
-            'description' => $this->extractDocblockSummary($node->getDocComment()),
             'attributes' => $attributes,
         ];
     }
@@ -143,38 +141,5 @@ final class ClassFactVisitor extends NodeVisitorAbstract
         }
 
         return $args;
-    }
-
-    private function extractDocblockSummary(?Doc $docComment): ?string
-    {
-        if ($docComment === null) {
-            return null;
-        }
-
-        $text = (string) preg_replace('/^\/\*\*|\*\/$/', '', trim($docComment->getText()));
-
-        $summary = [];
-
-        foreach (preg_split('/\R/', $text) ?: [] as $line) {
-            $clean = ltrim(trim($line), "* \t");
-
-            if ($clean === '') {
-                if ($summary !== []) {
-                    break;
-                }
-
-                continue;
-            }
-
-            if (str_starts_with($clean, '@')) {
-                break;
-            }
-
-            $summary[] = $clean;
-        }
-
-        $paragraph = trim((string) preg_replace('/\{@see\s+([^}]+)\}/', '$1', implode(' ', $summary)));
-
-        return $paragraph === '' ? null : $paragraph;
     }
 }
