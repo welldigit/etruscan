@@ -13,15 +13,20 @@ generated_by: etruscan
 
 ## Description
 
-The usefulness report: consultations per tool, most-consulted nodes, and the misses that are
-pre-validated annotation candidates. --days windows it, --json feeds dashboards.
+The usefulness report: consultations per tool, most-consulted nodes, the misses that are
+pre-validated annotation candidates, and the context served (chars plus an estimated token count).
+--days windows it, --json feeds dashboards, --html renders the self-contained dashboard page.
 
 ## References
 
 - [[absolute-path-resolver]]
+- [[etruscan-config]]
 - [[etruscan-context]]
 - [[etruscan-layer]]
 - [[etruscan-node]]
+- [[reports-directory-preparer]]
+- [[reports-path-resolver]]
+- [[token-estimator]]
 - [[usage-log-path-resolver]]
 - [[usage-log-reader]]
 - [[usage-page-renderer]]

@@ -21,6 +21,7 @@ something worth annotating.
 
 ## Referenced by
 
+- [[consultation-recorder]]
 - [[lookup-node]]
 - [[map-overview]]
 - [[search-map]]

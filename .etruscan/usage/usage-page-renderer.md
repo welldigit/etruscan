@@ -19,6 +19,7 @@ template-plus-embedded-JSON pattern as [[graph-page-renderer]]; opens in any bro
 - [[etruscan-context]]
 - [[etruscan-layer]]
 - [[etruscan-node]]
+- [[token-estimator]]
 - [[usage-report]]
 
 ## Referenced by

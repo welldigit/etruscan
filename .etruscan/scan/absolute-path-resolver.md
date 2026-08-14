@@ -25,12 +25,7 @@ relative and absolute inputs behave identically everywhere.
 
 ## Referenced by
 
-- [[etruscan-check]]
-- [[etruscan-generate]]
+- [[etruscan-config]]
 - [[etruscan-graph]]
 - [[etruscan-usage]]
-- [[lookup-node]]
-- [[map-overview]]
 - [[scanned-folder-resolver]]
-- [[search-map]]
-- [[trace-node]]

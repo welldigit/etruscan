@@ -11,8 +11,8 @@ generated_by: etruscan
 ## Description
 
 Marks a class as a vault node. The alias is the permanent name of the concept — it keys the note
-filename, every [[wikilink]], and the manual notes across regenerations. Aliases must be unique
-codebase-wide; collisions fail the projection loud.
+filename, every wikilink, the human description, and the manual notes across regenerations. Aliases
+must be unique codebase-wide; collisions fail the projection loud.
 
 ## References
 
@@ -25,6 +25,7 @@ codebase-wide; collisions fail the projection loud.
 - [[alias-collision]]
 - [[axis-attribute-reader]]
 - [[axis-key-parser]]
+- [[blank-line-trimmer]]
 - [[broken-link-checker]]
 - [[check-category]]
 - [[check-finding]]
@@ -32,9 +33,11 @@ codebase-wide; collisions fail the projection loud.
 - [[class-fact-collector]]
 - [[class-fact-visitor]]
 - [[codebase-scanner]]
+- [[consultation-recorder]]
 - [[duplicate-alias-checker]]
 - [[etruscan-axis]]
 - [[etruscan-check]]
+- [[etruscan-config]]
 - [[etruscan-context]]
 - [[etruscan-domain]]
 - [[etruscan-generate]]
@@ -45,13 +48,13 @@ codebase-wide; collisions fail the projection loud.
 - [[etruscan-service-provider]]
 - [[etruscan-slice]]
 - [[etruscan-usage]]
-- [[generated-note-section]]
 - [[graph-page-renderer]]
 - [[identity-frontmatter-key]]
 - [[invalid-grouping-value]]
 - [[lookup-node]]
 - [[map-overview]]
 - [[map-overview-builder]]
+- [[map-reader]]
 - [[map-search]]
 - [[markdown-note-renderer]]
 - [[node-graph-builder]]
@@ -60,13 +63,17 @@ codebase-wide; collisions fail the projection loud.
 - [[note-content]]
 - [[note-parser]]
 - [[note-path-resolver]]
+- [[note-section]]
 - [[orphan-node-checker]]
 - [[parsed-note]]
+- [[reports-directory-preparer]]
+- [[reports-path-resolver]]
 - [[reserved-axis-key]]
 - [[scanned-class]]
 - [[scanned-folder-resolver]]
 - [[search-map]]
 - [[target-folder-counter]]
+- [[token-estimator]]
 - [[trace-direction]]
 - [[trace-node]]
 - [[usage-event]]
@@ -78,6 +85,7 @@ codebase-wide; collisions fail the projection loud.
 - [[usage-recorder]]
 - [[usage-report]]
 - [[usage-report-builder]]
+- [[vault-description-reader]]
 - [[vault-reader]]
 - [[vault-writer]]
 - [[vocabulary-checker]]

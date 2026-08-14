@@ -26,7 +26,5 @@ written is exactly what is read.
 
 ## Referenced by
 
-- [[lookup-node]]
-- [[map-overview]]
-- [[search-map]]
-- [[trace-node]]
+- [[map-reader]]
+- [[vault-description-reader]]

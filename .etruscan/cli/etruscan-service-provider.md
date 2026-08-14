@@ -24,3 +24,7 @@ Registers the etruscan config file and both artisan commands via spatie/laravel-
 - [[etruscan-mcp-server]]
 - [[etruscan-node]]
 - [[etruscan-usage]]
+- [[lookup-node]]
+- [[map-overview]]
+- [[search-map]]
+- [[trace-node]]

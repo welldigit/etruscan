@@ -18,19 +18,18 @@ isolated nodes, and dangling wikilinks.
 
 ## References
 
-- [[absolute-path-resolver]]
 - [[broken-link-checker]]
 - [[check-category]]
 - [[check-finding]]
 - [[check-severity]]
 - [[codebase-scanner]]
 - [[duplicate-alias-checker]]
+- [[etruscan-config]]
 - [[etruscan-context]]
 - [[etruscan-layer]]
 - [[etruscan-node]]
 - [[node-graph-builder]]
 - [[orphan-node-checker]]
-- [[scanned-folder-resolver]]
 - [[vocabulary-checker]]
 
 ## Referenced by

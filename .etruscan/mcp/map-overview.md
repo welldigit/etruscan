@@ -16,18 +16,17 @@ default). The intended first tool in an unfamiliar codebase.
 
 ## References
 
-- [[absolute-path-resolver]]
+- [[consultation-recorder]]
+- [[etruscan-config]]
 - [[etruscan-context]]
 - [[etruscan-layer]]
 - [[etruscan-node]]
 - [[map-overview-builder]]
-- [[usage-event]]
+- [[map-reader]]
 - [[usage-event-type]]
-- [[usage-log-path-resolver]]
 - [[usage-outcome]]
-- [[usage-recorder]]
-- [[vault-reader]]
 
 ## Referenced by
 
 - [[etruscan-mcp-server]]
+- [[etruscan-service-provider]]

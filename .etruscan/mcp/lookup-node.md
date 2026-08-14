@@ -17,20 +17,19 @@ suggests the closest aliases.
 
 ## References
 
-- [[absolute-path-resolver]]
+- [[consultation-recorder]]
+- [[etruscan-config]]
 - [[etruscan-context]]
 - [[etruscan-layer]]
 - [[etruscan-node]]
 - [[identity-frontmatter-key]]
+- [[map-reader]]
 - [[node-lookup]]
 - [[parsed-note]]
-- [[usage-event]]
 - [[usage-event-type]]
-- [[usage-log-path-resolver]]
 - [[usage-outcome]]
-- [[usage-recorder]]
-- [[vault-reader]]
 
 ## Referenced by
 
 - [[etruscan-mcp-server]]
+- [[etruscan-service-provider]]

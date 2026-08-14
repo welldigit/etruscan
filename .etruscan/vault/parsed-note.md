@@ -23,6 +23,7 @@ lists. What [[vault-reader]] returns and every MCP tool consumes.
 
 - [[lookup-node]]
 - [[map-overview-builder]]
+- [[map-reader]]
 - [[map-search]]
 - [[node-lookup]]
 - [[node-trace]]

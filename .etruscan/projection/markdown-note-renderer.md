@@ -10,17 +10,19 @@ generated_by: etruscan
 
 ## Description
 
-Renders one note deterministically: YAML frontmatter carrying the generation marker, an optional
-Description section (wrapped as readable prose), References as [[wikilinks]], and any carried-over
-manual content below.
+Renders one note deterministically: YAML frontmatter carrying the generation marker, the Description
+section (heading always seeded — empty until a human fills it; the text is only ever carried,
+never derived from code — prose is tidy-wrapped, text with its own formatting passes
+byte-for-byte), References as wikilinks, and any carried-over manual content below.
 
 ## References
 
+- [[blank-line-trimmer]]
 - [[etruscan-context]]
 - [[etruscan-layer]]
 - [[etruscan-node]]
-- [[generated-note-section]]
 - [[note-content]]
+- [[note-section]]
 
 ## Referenced by
 

@@ -23,6 +23,4 @@ through [[absolute-path-resolver]].
 
 ## Referenced by
 
-- [[etruscan-check]]
-- [[etruscan-generate]]
-- [[etruscan-graph]]
+- [[etruscan-config]]

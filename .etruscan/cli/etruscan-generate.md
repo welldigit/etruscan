@@ -16,10 +16,10 @@ The projector: scan folders, build notes, write the vault. Options: --vault, --g
 
 ## References
 
-- [[absolute-path-resolver]]
 - [[alias-collision]]
 - [[axis-key-parser]]
 - [[codebase-scanner]]
+- [[etruscan-config]]
 - [[etruscan-context]]
 - [[etruscan-layer]]
 - [[etruscan-node]]
@@ -28,7 +28,6 @@ The projector: scan folders, build notes, write the vault. Options: --vault, --g
 - [[note-content]]
 - [[note-path-resolver]]
 - [[reserved-axis-key]]
-- [[scanned-folder-resolver]]
 - [[target-folder-counter]]
 - [[vault-writer]]
 

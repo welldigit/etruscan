@@ -10,18 +10,17 @@ generated_by: etruscan
 
 ## Description
 
-Single owner of the usage log location: usage.jsonl inside the vault, next to the notes it measures.
+Single owner of the usage log location: `usage.jsonl` inside the vault's [[reports-path-resolver]]
+folder, next to the reports built from it.
 
 ## References
 
 - [[etruscan-context]]
 - [[etruscan-layer]]
 - [[etruscan-node]]
+- [[reports-path-resolver]]
 
 ## Referenced by
 
+- [[consultation-recorder]]
 - [[etruscan-usage]]
-- [[lookup-node]]
-- [[map-overview]]
-- [[search-map]]
-- [[trace-node]]

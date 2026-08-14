@@ -11,8 +11,8 @@ generated_by: etruscan
 ## Description
 
 One recorded map consultation: which tool, hit or miss, the exact subject the agent asked for, how
-many results came back, and a server-stamped timestamp. The atom the usefulness report is built
-from.
+many results came back, the size of the served answer in characters, and a server-stamped timestamp.
+The atom the usefulness report is built from.
 
 ## References
 
@@ -24,10 +24,7 @@ from.
 
 ## Referenced by
 
-- [[lookup-node]]
-- [[map-overview]]
-- [[search-map]]
-- [[trace-node]]
+- [[consultation-recorder]]
 - [[usage-log-reader]]
 - [[usage-recorder]]
 - [[usage-report-builder]]

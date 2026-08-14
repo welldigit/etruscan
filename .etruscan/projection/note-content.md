@@ -10,8 +10,9 @@ generated_by: etruscan
 
 ## Description
 
-A fully resolved node, ready to render as one markdown note: alias, frontmatter, outgoing links,
-optional description.
+A fully resolved node, ready to render as one markdown note: alias, frontmatter, and both edge
+lists. The optional description is only ever the note's own human text (read from the vault for
+graph rendering) — generation never derives one.
 
 ## References
 

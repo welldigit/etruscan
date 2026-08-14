@@ -11,21 +11,25 @@ generated_by: etruscan
 
 ## Description
 
-Renders the interactive graph page from the same scan-and-build chain — default target is
-graph.html inside the vault, --output overrides.
+Renders the interactive graph page from the same scan-and-build chain, attaching each node's human
+description read from the vault notes — their only home. Default target is `.reports/graph.html`
+inside the vault, --output overrides.
 
 ## References
 
 - [[absolute-path-resolver]]
 - [[alias-collision]]
 - [[codebase-scanner]]
+- [[etruscan-config]]
 - [[etruscan-context]]
 - [[etruscan-layer]]
 - [[etruscan-node]]
 - [[graph-page-renderer]]
 - [[node-graph-builder]]
+- [[reports-directory-preparer]]
+- [[reports-path-resolver]]
 - [[reserved-axis-key]]
-- [[scanned-folder-resolver]]
+- [[vault-description-reader]]
 
 ## Referenced by
 

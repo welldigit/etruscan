@@ -11,10 +11,11 @@ generated_by: etruscan
 
 ## Description
 
-php-parser visitor gathering the raw facts of one parsed file: each named class with its parent,
-docblock summary, and attributes, plus the file's class references — imports, type hints,
-instantiations, attributes. Runs after a NameResolver (replaceNodes: false), so names carry resolved
-FQCNs. Anonymous classes and function/const imports are skipped.
+php-parser visitor gathering the raw facts of one parsed file: each named class with its parent and
+attributes, plus the file's class references — imports, type hints, instantiations, attributes.
+Docblocks are deliberately not read: descriptions are human-written in the vault, never harvested
+from source. Runs after a NameResolver (replaceNodes: false), so names carry resolved FQCNs.
+Anonymous classes and function/const imports are skipped.
 
 ## References
 

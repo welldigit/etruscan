@@ -20,6 +20,7 @@ Which MCP tool answered: lookup, search, trace or overview.
 
 ## Referenced by
 
+- [[consultation-recorder]]
 - [[lookup-node]]
 - [[map-overview]]
 - [[search-map]]

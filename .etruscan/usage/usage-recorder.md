@@ -19,12 +19,10 @@ measured.
 - [[etruscan-context]]
 - [[etruscan-layer]]
 - [[etruscan-node]]
+- [[reports-directory-preparer]]
 - [[usage-event]]
 
 ## Referenced by
 
-- [[lookup-node]]
-- [[map-overview]]
-- [[search-map]]
-- [[trace-node]]
+- [[consultation-recorder]]
 - [[usage-log-reader]]

@@ -17,11 +17,12 @@ about what a note contains.
 
 ## References
 
+- [[blank-line-trimmer]]
 - [[etruscan-context]]
 - [[etruscan-layer]]
 - [[etruscan-node]]
-- [[generated-note-section]]
 - [[identity-frontmatter-key]]
+- [[note-section]]
 - [[parsed-note]]
 
 ## Referenced by

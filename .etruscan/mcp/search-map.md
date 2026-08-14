@@ -17,20 +17,19 @@ annotation signal the system produces.
 
 ## References
 
-- [[absolute-path-resolver]]
+- [[consultation-recorder]]
+- [[etruscan-config]]
 - [[etruscan-context]]
 - [[etruscan-layer]]
 - [[etruscan-node]]
 - [[identity-frontmatter-key]]
+- [[map-reader]]
 - [[map-search]]
 - [[parsed-note]]
-- [[usage-event]]
 - [[usage-event-type]]
-- [[usage-log-path-resolver]]
 - [[usage-outcome]]
-- [[usage-recorder]]
-- [[vault-reader]]
 
 ## Referenced by
 
 - [[etruscan-mcp-server]]
+- [[etruscan-service-provider]]

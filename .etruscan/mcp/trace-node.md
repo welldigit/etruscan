@@ -17,19 +17,18 @@ files.
 
 ## References
 
-- [[absolute-path-resolver]]
+- [[consultation-recorder]]
+- [[etruscan-config]]
 - [[etruscan-context]]
 - [[etruscan-layer]]
 - [[etruscan-node]]
+- [[map-reader]]
 - [[node-trace]]
 - [[trace-direction]]
-- [[usage-event]]
 - [[usage-event-type]]
-- [[usage-log-path-resolver]]
 - [[usage-outcome]]
-- [[usage-recorder]]
-- [[vault-reader]]
 
 ## Referenced by
 
 - [[etruscan-mcp-server]]
+- [[etruscan-service-provider]]
