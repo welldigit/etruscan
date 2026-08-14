@@ -53,8 +53,29 @@ test('the configured grouping axis groups notes and leaves axis-less notes at th
 
     expect(File::exists($this->vaultPath.'/booking/fixture-alpha.md'))->toBeTrue()
         ->and(File::exists($this->vaultPath.'/fixture-beta.md'))->toBeTrue()
+        // the empty Description slot is seeded; the docblock never fills it — the words are the human's
         ->and(File::get($this->vaultPath.'/booking/fixture-alpha.md'))
-        ->toContain("## Description\n\nHandles the alpha side of the fixture domain.");
+        ->toContain('## Description')
+        ->not->toContain('Handles the alpha side of the fixture domain.');
+});
+
+test('a description written into the note survives regeneration', function () {
+    $this->artisan('etruscan:generate', ['--vault' => $this->vaultPath])
+        ->assertSuccessful();
+
+    $notePath = $this->vaultPath.'/fixture-alpha.md';
+    File::put($notePath, str_replace(
+        '## Description',
+        "## Description\n\nThe human's own words about alpha.",
+        File::get($notePath),
+    ));
+
+    $this->artisan('etruscan:generate', ['--vault' => $this->vaultPath])
+        ->assertSuccessful();
+
+    expect(File::get($notePath))
+        ->toContain("## Description\n\nThe human's own words about alpha.")
+        ->not->toContain('Handles the alpha side of the fixture domain.');
 });
 
 test('the group-by option set to none forces a flat vault over a grouped config', function () {
@@ -129,7 +150,7 @@ test('orphaned notes with manual content are kept and reported until purged', fu
     ])."\n");
 
     $this->artisan('etruscan:generate', ['--vault' => $this->vaultPath])
-        ->expectsOutputToContain('orphaned generated note(s) carrying manual notes')
+        ->expectsOutputToContain('orphaned generated note(s) carrying human words')
         ->assertSuccessful();
 
     expect(File::exists($this->vaultPath.'/legacy.md'))->toBeTrue();

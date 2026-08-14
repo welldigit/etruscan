@@ -18,16 +18,15 @@ use WellDigit\Etruscan\Services\CodebaseScanner;
 use WellDigit\Etruscan\Services\NodeGraphBuilder;
 use WellDigit\Etruscan\Services\NotePathResolver;
 use WellDigit\Etruscan\Services\VaultWriter;
-use WellDigit\Etruscan\Utilities\AbsolutePathResolver;
 use WellDigit\Etruscan\Utilities\AxisKeyParser;
-use WellDigit\Etruscan\Utilities\ScannedFolderResolver;
+use WellDigit\Etruscan\Utilities\EtruscanConfig;
 use WellDigit\Etruscan\Utilities\TargetFolderCounter;
 
 #[Description('Project attributed classes into a markdown vault (one note per node)')]
 #[Signature('etruscan:generate
         {--vault= : Override the output vault directory}
         {--group-by= : Override the grouping axis key(s), comma-separated for nested folders (use "none" to force a flat vault)}
-        {--purge : Delete orphaned generated notes even when they carry manual notes}
+        {--purge : Delete orphaned generated notes even when they carry human words (a description or manual notes)}
         {--dry-run : Report what would be generated without writing}')]
 #[EtruscanNode('etruscan-generate')]
 #[EtruscanLayer('command')]
@@ -39,12 +38,10 @@ final class EtruscanCommand extends Command
         NodeGraphBuilder $nodeGraphBuilder,
         VaultWriter $vaultWriter,
     ): int {
-        $scannedFolders = ScannedFolderResolver::resolve(config('etruscan.scanned_folders', ['app', 'src']));
+        $scannedFolders = EtruscanConfig::scannedFolders();
 
         $vaultOption = $this->option('vault');
-        $vaultPath = AbsolutePathResolver::resolve(
-            is_string($vaultOption) && $vaultOption !== '' ? $vaultOption : (string) config('etruscan.vault_path', '.etruscan'),
-        );
+        $vaultPath = EtruscanConfig::vaultPath(is_string($vaultOption) ? $vaultOption : null);
 
         $groupByOption = $this->option('group-by');
 
@@ -58,8 +55,8 @@ final class EtruscanCommand extends Command
         $groupByAxisKeys = $this->resolveGroupByAxisKeys();
         $notePathResolver = new NotePathResolver(groupByAxisKeys: $groupByAxisKeys);
 
-        $markerKey = (string) config('etruscan.generated_marker', 'generated_by');
-        $markerValue = (string) config('etruscan.generated_value', 'etruscan');
+        $markerKey = EtruscanConfig::markerKey();
+        $markerValue = EtruscanConfig::markerValue();
 
         $this->info('Scanning for attributed classes ...');
 
@@ -118,7 +115,7 @@ final class EtruscanCommand extends Command
 
         if ($summary['orphaned'] !== []) {
             $this->warn(sprintf(
-                'Kept %d orphaned generated note(s) carrying manual notes (re-run with --purge to delete):',
+                'Kept %d orphaned generated note(s) carrying human words (re-run with --purge to delete them, words and all):',
                 count($summary['orphaned']),
             ));
 
@@ -141,13 +138,9 @@ final class EtruscanCommand extends Command
             return $groupByOption === 'none' ? [] : AxisKeyParser::parse($groupByOption);
         }
 
-        $configuredGroupBy = config('etruscan.group_by');
+        $configuredGroupBy = EtruscanConfig::groupBy();
 
-        if (is_array($configuredGroupBy)) {
-            $configuredGroupBy = implode(',', array_filter($configuredGroupBy, is_string(...)));
-        }
-
-        return is_string($configuredGroupBy) ? AxisKeyParser::parse($configuredGroupBy) : [];
+        return $configuredGroupBy === null ? [] : AxisKeyParser::parse($configuredGroupBy);
     }
 
     /**

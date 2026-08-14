@@ -19,8 +19,7 @@ use WellDigit\Etruscan\Services\DuplicateAliasChecker;
 use WellDigit\Etruscan\Services\NodeGraphBuilder;
 use WellDigit\Etruscan\Services\OrphanNodeChecker;
 use WellDigit\Etruscan\Services\VocabularyChecker;
-use WellDigit\Etruscan\Utilities\AbsolutePathResolver;
-use WellDigit\Etruscan\Utilities\ScannedFolderResolver;
+use WellDigit\Etruscan\Utilities\EtruscanConfig;
 
 /**
  * Audits the map for the mistakes annotations invite: duplicate aliases,
@@ -42,11 +41,10 @@ final class EtruscanCheckCommand extends Command
         OrphanNodeChecker $orphanNodeChecker,
         BrokenLinkChecker $brokenLinkChecker,
     ): int {
-        $scannedFolders = ScannedFolderResolver::resolve(config('etruscan.scanned_folders', ['app', 'src']));
-        $vaultPath = AbsolutePathResolver::resolve((string) config('etruscan.vault_path', '.etruscan'));
+        $scannedFolders = EtruscanConfig::scannedFolders();
+        $vaultPath = EtruscanConfig::vaultPath();
 
-        /** @var array<string, list<string>> $vocabulary */
-        $vocabulary = (array) config('etruscan.vocabulary', []);
+        $vocabulary = EtruscanConfig::vocabulary();
 
         $this->info('Checking the map ...');
 
