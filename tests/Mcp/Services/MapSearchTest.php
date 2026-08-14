@@ -5,6 +5,9 @@ declare(strict_types=1);
 use WellDigit\Etruscan\Mcp\Services\MapSearch;
 use WellDigit\Etruscan\Payloads\ParsedNote;
 
+/**
+ * @param  array<string, string|list<string>>  $axes
+ */
 function searchNote(string $alias, string $class = '', string $description = '', array $axes = []): ParsedNote
 {
     return new ParsedNote(

@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Illuminate\Support\Facades\File;
 use Laravel\Mcp\Facades\Mcp;
 use Laravel\Mcp\Request;
+use WellDigit\Etruscan\Mcp\Services\MapReader;
 use WellDigit\Etruscan\Mcp\Tools\LookupNode;
 use WellDigit\Etruscan\Mcp\Tools\MapOverview;
 use WellDigit\Etruscan\Mcp\Tools\SearchMap;
@@ -61,16 +62,19 @@ afterEach(function () {
     File::deleteDirectory($this->vaultPath);
 });
 
+/**
+ * @return list<array<string, mixed>>
+ */
 function usageLines(string $vaultPath): array
 {
-    $logPath = $vaultPath.'/usage.jsonl';
+    $logPath = $vaultPath.'/.reports/usage.jsonl';
 
     if (! File::exists($logPath)) {
         return [];
     }
 
     return array_map(
-        static fn (string $line): mixed => json_decode($line, true),
+        decodeJson(...),
         array_values(array_filter(explode("\n", File::get($logPath)))),
     );
 }
@@ -94,7 +98,8 @@ test('lookup-node returns the full note and records a hit', function () {
     expect($lines)->toHaveCount(1)
         ->and($lines[0]['type'])->toBe('lookup')
         ->and($lines[0]['outcome'])->toBe('hit')
-        ->and($lines[0]['subject'])->toBe('monitor-create');
+        ->and($lines[0]['subject'])->toBe('monitor-create')
+        ->and($lines[0]['chars'])->toBe(mb_strlen($text));
 });
 
 test('lookup-node records a ground-truth miss with suggestions for an unknown alias', function () {
@@ -108,7 +113,8 @@ test('lookup-node records a ground-truth miss with suggestions for an unknown al
 
     expect($lines)->toHaveCount(1)
         ->and($lines[0]['outcome'])->toBe('miss')
-        ->and($lines[0]['subject'])->toBe('monitor-creat');
+        ->and($lines[0]['subject'])->toBe('monitor-creat')
+        ->and($lines[0]['chars'])->toBe(mb_strlen($text));
 });
 
 test('search-map ranks matches and records the result count', function () {
@@ -122,7 +128,8 @@ test('search-map ranks matches and records the result count', function () {
 
     expect($lines[0]['type'])->toBe('search')
         ->and($lines[0]['outcome'])->toBe('hit')
-        ->and($lines[0]['results'])->toBe(2);
+        ->and($lines[0]['results'])->toBe(2)
+        ->and($lines[0]['chars'])->toBe(mb_strlen($text));
 });
 
 test('search-map records a miss for a query nothing matches', function () {
@@ -168,4 +175,92 @@ test('an empty vault yields a generate hint, not a recorded event', function () 
 
     expect((string) $response->content())->toContain('etruscan:generate')
         ->and(usageLines($this->vaultPath.'-missing'))->toBe([]);
+});
+
+// The paths an agent hits when it calls a tool wrong, or before the map exists.
+// Each one's message is the only guidance it gets, so each one is asserted.
+
+test('every tool declares its arguments, and the required ones are marked required', function () {
+    $schemas = [
+        LookupNode::class => ['alias'],
+        SearchMap::class => ['query'],
+        TraceNode::class => ['alias', 'direction'],
+        MapOverview::class => ['axis'],
+    ];
+
+    foreach ($schemas as $tool => $arguments) {
+        $properties = app($tool)->toArray()['inputSchema']['properties'] ?? [];
+
+        expect($properties)->toBeArray()
+            ->and(array_keys(is_array($properties) ? $properties : []))->toBe($arguments, $tool);
+    }
+});
+
+test('a blank required argument is refused with a usable instruction', function () {
+    expect((string) app(LookupNode::class)->handle(new Request(['alias' => '   ']))->content())
+        ->toContain('Provide the node alias to look up.')
+        ->and((string) app(SearchMap::class)->handle(new Request(['query' => '']))->content())
+        ->toContain('Provide a search query.')
+        ->and((string) app(TraceNode::class)->handle(new Request(['alias' => '']))->content())
+        ->toContain('Provide the node alias to trace.');
+});
+
+test('an unknown trace direction names the three that work', function () {
+    $text = (string) app(TraceNode::class)->handle(new Request(['alias' => 'monitor', 'direction' => 'sideways']))
+        ->content();
+
+    expect($text)->toContain('out, in, both');
+});
+
+test('trace-node records a miss and points at search-map when the alias is unknown', function () {
+    $response = app(TraceNode::class)->handle(new Request(['alias' => 'nope']));
+    $lines = usageLines($this->vaultPath);
+
+    expect((string) $response->content())->toContain('use search-map to find the right alias')
+        ->and($lines[0]['type'])->toBe('trace')
+        ->and($lines[0]['outcome'])->toBe('miss')
+        ->and($lines[0]['results'])->toBe(0);
+});
+
+test('every tool says the same thing when there is no map yet', function () {
+    config()->set('etruscan.vault_path', $this->vaultPath.'-empty');
+
+    $requests = [
+        LookupNode::class => ['alias' => 'monitor'],
+        SearchMap::class => ['query' => 'monitor'],
+        TraceNode::class => ['alias' => 'monitor'],
+        MapOverview::class => [],
+    ];
+
+    foreach ($requests as $tool => $arguments) {
+        expect((string) app($tool)->handle(new Request($arguments))->content())
+            ->toContain(MapReader::EMPTY_MAP_MESSAGE);
+    }
+});
+
+test('a long description is truncated in search results so one node cannot crowd out the rest', function () {
+    File::put($this->vaultPath.'/verbose.md', implode("\n", [
+        '---',
+        'alias: verbose',
+        'class: Verbose',
+        'source: src/Verbose.php',
+        'generated_by: etruscan',
+        '---',
+        '',
+        '## Description',
+        '',
+        str_repeat('long ', 60),
+    ])."\n");
+
+    $text = (string) app(SearchMap::class)->handle(new Request(['query' => 'verbose']))->content();
+
+    expect($text)->toContain('...')
+        ->and(mb_strlen($text))->toBeLessThan(300);
+});
+
+test('a miss with nothing close falls back to the annotate instruction alone', function () {
+    $text = (string) app(LookupNode::class)->handle(new Request(['alias' => 'zzzzzzzz']))->content();
+
+    expect($text)->toContain('#[EtruscanNode]')
+        ->and($text)->not->toContain('Closest aliases');
 });

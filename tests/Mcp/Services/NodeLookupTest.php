@@ -14,7 +14,7 @@ test('a known alias returns its note with no suggestions', function () {
     $lookup = (new NodeLookup)(['monitor-create' => mapNote('monitor-create')], 'monitor-create');
 
     expect($lookup['note'])->not->toBeNull()
-        ->and($lookup['note']->alias)->toBe('monitor-create')
+        ->and($lookup['note']?->alias)->toBe('monitor-create')
         ->and($lookup['suggestions'])->toBe([]);
 });
 

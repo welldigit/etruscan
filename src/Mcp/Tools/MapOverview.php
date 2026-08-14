@@ -14,12 +14,10 @@ use WellDigit\Etruscan\Attributes\Vocabulary\EtruscanContext;
 use WellDigit\Etruscan\Attributes\Vocabulary\EtruscanLayer;
 use WellDigit\Etruscan\Enums\UsageEventType;
 use WellDigit\Etruscan\Enums\UsageOutcome;
+use WellDigit\Etruscan\Mcp\Services\ConsultationRecorder;
 use WellDigit\Etruscan\Mcp\Services\MapOverviewBuilder;
-use WellDigit\Etruscan\Payloads\UsageEvent;
-use WellDigit\Etruscan\Services\UsageRecorder;
-use WellDigit\Etruscan\Services\VaultReader;
-use WellDigit\Etruscan\Utilities\AbsolutePathResolver;
-use WellDigit\Etruscan\Utilities\UsageLogPathResolver;
+use WellDigit\Etruscan\Mcp\Services\MapReader;
+use WellDigit\Etruscan\Utilities\EtruscanConfig;
 
 #[IsReadOnly]
 #[EtruscanNode('map-overview')]
@@ -30,9 +28,9 @@ final class MapOverview extends Tool
     protected string $description = 'Orient in the codebase in one call: every node on the map grouped by a taxonomy axis (context by default). Start here when the area is unfamiliar.';
 
     public function __construct(
-        private readonly VaultReader $vaultReader,
+        private readonly MapReader $mapReader,
         private readonly MapOverviewBuilder $mapOverviewBuilder,
-        private readonly UsageRecorder $usageRecorder,
+        private readonly ConsultationRecorder $consultationRecorder,
     ) {}
 
     /**
@@ -50,17 +48,14 @@ final class MapOverview extends Tool
     {
         $axis = trim((string) $request->string('axis', 'context'));
 
-        $vaultPath = AbsolutePathResolver::resolve((string) config('etruscan.vault_path', '.etruscan'));
-        $markerKey = (string) config('etruscan.generated_marker', 'generated_by');
-        $notesByAlias = ($this->vaultReader)($vaultPath, $markerKey);
+        $markerKey = EtruscanConfig::markerKey();
+        $notesByAlias = ($this->mapReader)();
 
         if ($notesByAlias === []) {
-            return Response::error('The map is empty — generate it first with: php artisan etruscan:generate');
+            return Response::error(MapReader::EMPTY_MAP_MESSAGE);
         }
 
         $overview = ($this->mapOverviewBuilder)($notesByAlias, $axis, $markerKey);
-
-        $this->record(vaultPath: $vaultPath, subject: $overview['axis'], results: count($notesByAlias));
 
         $lines = [sprintf('%d nodes on the map, grouped by [%s]:', count($notesByAlias), $overview['axis'])];
 
@@ -73,21 +68,17 @@ final class MapOverview extends Tool
             }
         }
 
-        return Response::text(implode("\n", $lines));
-    }
+        $text = implode("\n", $lines);
 
-    private function record(string $vaultPath, string $subject, int $results): void
-    {
-        if (! config('etruscan.usage_tracking', true)) {
-            return;
-        }
-
-        ($this->usageRecorder)(UsageLogPathResolver::resolve($vaultPath), new UsageEvent(
+        ($this->consultationRecorder)(
+            vaultPath: EtruscanConfig::vaultPath(),
             type: UsageEventType::Overview,
             outcome: UsageOutcome::Hit,
-            subject: $subject,
-            results: $results,
-            recordedAt: now()->toIso8601String(),
-        ));
+            subject: $overview['axis'],
+            results: count($notesByAlias),
+            servedText: $text,
+        );
+
+        return Response::text($text);
     }
 }

@@ -15,13 +15,11 @@ use WellDigit\Etruscan\Attributes\Vocabulary\EtruscanLayer;
 use WellDigit\Etruscan\Enums\IdentityFrontmatterKey;
 use WellDigit\Etruscan\Enums\UsageEventType;
 use WellDigit\Etruscan\Enums\UsageOutcome;
+use WellDigit\Etruscan\Mcp\Services\ConsultationRecorder;
+use WellDigit\Etruscan\Mcp\Services\MapReader;
 use WellDigit\Etruscan\Mcp\Services\MapSearch;
 use WellDigit\Etruscan\Payloads\ParsedNote;
-use WellDigit\Etruscan\Payloads\UsageEvent;
-use WellDigit\Etruscan\Services\UsageRecorder;
-use WellDigit\Etruscan\Services\VaultReader;
-use WellDigit\Etruscan\Utilities\AbsolutePathResolver;
-use WellDigit\Etruscan\Utilities\UsageLogPathResolver;
+use WellDigit\Etruscan\Utilities\EtruscanConfig;
 
 #[IsReadOnly]
 #[EtruscanNode('search-map')]
@@ -32,9 +30,9 @@ final class SearchMap extends Tool
     protected string $description = 'Search the codebase map by name or concept — matches node aliases, class names, taxonomy values and descriptions. Returns ranked nodes; follow up with lookup-node.';
 
     public function __construct(
-        private readonly VaultReader $vaultReader,
+        private readonly MapReader $mapReader,
         private readonly MapSearch $mapSearch,
-        private readonly UsageRecorder $usageRecorder,
+        private readonly ConsultationRecorder $consultationRecorder,
     ) {}
 
     /**
@@ -56,27 +54,28 @@ final class SearchMap extends Tool
             return Response::error('Provide a search query.');
         }
 
-        $vaultPath = AbsolutePathResolver::resolve((string) config('etruscan.vault_path', '.etruscan'));
-        $notesByAlias = ($this->vaultReader)($vaultPath, (string) config('etruscan.generated_marker', 'generated_by'));
+        $notesByAlias = ($this->mapReader)();
 
         if ($notesByAlias === []) {
-            return Response::error('The map is empty — generate it first with: php artisan etruscan:generate');
+            return Response::error(MapReader::EMPTY_MAP_MESSAGE);
         }
 
         $matches = ($this->mapSearch)($notesByAlias, $query);
 
-        $this->record(
-            vaultPath: $vaultPath,
-            subject: $query,
+        $text = $matches === []
+            ? 'No nodes match ['.$query.']. The concept may be missing from the map — consider annotating the class that owns it.'
+            : implode("\n", array_map($this->line(...), $matches));
+
+        ($this->consultationRecorder)(
+            vaultPath: EtruscanConfig::vaultPath(),
+            type: UsageEventType::Search,
             outcome: $matches === [] ? UsageOutcome::Miss : UsageOutcome::Hit,
+            subject: $query,
             results: count($matches),
+            servedText: $text,
         );
 
-        if ($matches === []) {
-            return Response::text('No nodes match ['.$query.']. The concept may be missing from the map — consider annotating the class that owns it.');
-        }
-
-        return Response::text(implode("\n", array_map($this->line(...), $matches)));
+        return Response::text($text);
     }
 
     private function line(ParsedNote $parsedNote): string
@@ -95,20 +94,5 @@ final class SearchMap extends Tool
             is_string($source) ? ' ('.$source.')' : '',
             $description === '' ? '' : ' — '.$description,
         );
-    }
-
-    private function record(string $vaultPath, string $subject, UsageOutcome $outcome, int $results): void
-    {
-        if (! config('etruscan.usage_tracking', true)) {
-            return;
-        }
-
-        ($this->usageRecorder)(UsageLogPathResolver::resolve($vaultPath), new UsageEvent(
-            type: UsageEventType::Search,
-            outcome: $outcome,
-            subject: $subject,
-            results: $results,
-            recordedAt: now()->toIso8601String(),
-        ));
     }
 }

@@ -5,6 +5,9 @@ declare(strict_types=1);
 use WellDigit\Etruscan\Mcp\Services\MapOverviewBuilder;
 use WellDigit\Etruscan\Payloads\ParsedNote;
 
+/**
+ * @param  array<string, string|list<string>>  $frontmatter
+ */
 function overviewNote(string $alias, array $frontmatter = []): ParsedNote
 {
     return new ParsedNote(

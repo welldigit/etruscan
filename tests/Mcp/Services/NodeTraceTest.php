@@ -6,6 +6,10 @@ use WellDigit\Etruscan\Enums\TraceDirection;
 use WellDigit\Etruscan\Mcp\Services\NodeTrace;
 use WellDigit\Etruscan\Payloads\ParsedNote;
 
+/**
+ * @param  list<string>  $links
+ * @param  list<string>  $referencedBy
+ */
 function traceNote(string $alias, array $links = [], array $referencedBy = [], string $description = ''): ParsedNote
 {
     return new ParsedNote(
@@ -27,8 +31,9 @@ test('both directions come back with neighbour descriptions', function () {
 
     $trace = (new NodeTrace)($notesByAlias, 'hub', TraceDirection::Both);
 
-    expect($trace['references'])->toBe(['leaf' => 'A leaf node.'])
-        ->and($trace['referencedBy'])->toBe(['root' => 'The root.']);
+    expect($trace)->not->toBeNull()
+        ->and($trace['references'] ?? null)->toBe(['leaf' => 'A leaf node.'])
+        ->and($trace['referencedBy'] ?? null)->toBe(['root' => 'The root.']);
 });
 
 test('direction restricts the trace to one side', function () {
@@ -38,8 +43,8 @@ test('direction restricts the trace to one side', function () {
         'root' => traceNote(alias: 'root'),
     ];
 
-    expect((new NodeTrace)($notesByAlias, 'hub', TraceDirection::Out)['referencedBy'])->toBe([])
-        ->and((new NodeTrace)($notesByAlias, 'hub', TraceDirection::In)['references'])->toBe([]);
+    expect((new NodeTrace)($notesByAlias, 'hub', TraceDirection::Out)['referencedBy'] ?? null)->toBe([])
+        ->and((new NodeTrace)($notesByAlias, 'hub', TraceDirection::In)['references'] ?? null)->toBe([]);
 });
 
 test('an unknown alias yields null', function () {

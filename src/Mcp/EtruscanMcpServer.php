@@ -24,7 +24,7 @@ final class EtruscanMcpServer extends Server
 
     protected string $instructions = <<<'TEXT'
         Etruscan serves this project's codebase map: one node per meaningful class,
-        with a plain-language description, taxonomy axes, the source file path, and
+        with a human-written description, taxonomy axes, the source file path, and
         dependency links in both directions. Consult the map BEFORE crawling source
         files. Use map-overview to orient in the codebase, search-map to find nodes
         by name or concept, lookup-node to read one node in full (then open its

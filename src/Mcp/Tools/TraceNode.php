@@ -15,12 +15,10 @@ use WellDigit\Etruscan\Attributes\Vocabulary\EtruscanLayer;
 use WellDigit\Etruscan\Enums\TraceDirection;
 use WellDigit\Etruscan\Enums\UsageEventType;
 use WellDigit\Etruscan\Enums\UsageOutcome;
+use WellDigit\Etruscan\Mcp\Services\ConsultationRecorder;
+use WellDigit\Etruscan\Mcp\Services\MapReader;
 use WellDigit\Etruscan\Mcp\Services\NodeTrace;
-use WellDigit\Etruscan\Payloads\UsageEvent;
-use WellDigit\Etruscan\Services\UsageRecorder;
-use WellDigit\Etruscan\Services\VaultReader;
-use WellDigit\Etruscan\Utilities\AbsolutePathResolver;
-use WellDigit\Etruscan\Utilities\UsageLogPathResolver;
+use WellDigit\Etruscan\Utilities\EtruscanConfig;
 
 #[IsReadOnly]
 #[EtruscanNode('trace-node')]
@@ -31,9 +29,9 @@ final class TraceNode extends Tool
     protected string $description = 'Follow a node\'s dependency edges one hop: what it references (out), what references it (in), or both. Each neighbour comes with its one-line description.';
 
     public function __construct(
-        private readonly VaultReader $vaultReader,
+        private readonly MapReader $mapReader,
         private readonly NodeTrace $nodeTrace,
-        private readonly UsageRecorder $usageRecorder,
+        private readonly ConsultationRecorder $consultationRecorder,
     ) {}
 
     /**
@@ -62,29 +60,41 @@ final class TraceNode extends Tool
             return Response::error('Direction must be one of: out, in, both.');
         }
 
-        $vaultPath = AbsolutePathResolver::resolve((string) config('etruscan.vault_path', '.etruscan'));
-        $notesByAlias = ($this->vaultReader)($vaultPath, (string) config('etruscan.generated_marker', 'generated_by'));
+        $notesByAlias = ($this->mapReader)();
 
         if ($notesByAlias === []) {
-            return Response::error('The map is empty — generate it first with: php artisan etruscan:generate');
+            return Response::error(MapReader::EMPTY_MAP_MESSAGE);
         }
 
         $trace = ($this->nodeTrace)($notesByAlias, $alias, $traceDirection);
 
         if ($trace === null) {
-            $this->record(vaultPath: $vaultPath, subject: $alias, outcome: UsageOutcome::Miss, results: 0);
+            $text = 'No node ['.$alias.'] on the map — use search-map to find the right alias.';
 
-            return Response::text('No node ['.$alias.'] on the map — use search-map to find the right alias.');
+            ($this->consultationRecorder)(
+                vaultPath: EtruscanConfig::vaultPath(),
+                type: UsageEventType::Trace,
+                outcome: UsageOutcome::Miss,
+                subject: $alias,
+                results: 0,
+                servedText: $text,
+            );
+
+            return Response::text($text);
         }
 
-        $this->record(
-            vaultPath: $vaultPath,
-            subject: $alias,
+        $text = $this->render(alias: $alias, trace: $trace);
+
+        ($this->consultationRecorder)(
+            vaultPath: EtruscanConfig::vaultPath(),
+            type: UsageEventType::Trace,
             outcome: UsageOutcome::Hit,
+            subject: $alias,
             results: count($trace['references']) + count($trace['referencedBy']),
+            servedText: $text,
         );
 
-        return Response::text($this->render(alias: $alias, trace: $trace));
+        return Response::text($text);
     }
 
     /**
@@ -121,20 +131,5 @@ final class TraceNode extends Tool
         }
 
         return $lines;
-    }
-
-    private function record(string $vaultPath, string $subject, UsageOutcome $outcome, int $results): void
-    {
-        if (! config('etruscan.usage_tracking', true)) {
-            return;
-        }
-
-        ($this->usageRecorder)(UsageLogPathResolver::resolve($vaultPath), new UsageEvent(
-            type: UsageEventType::Trace,
-            outcome: $outcome,
-            subject: $subject,
-            results: $results,
-            recordedAt: now()->toIso8601String(),
-        ));
     }
 }
