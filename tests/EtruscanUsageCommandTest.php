@@ -17,9 +17,13 @@ afterEach(function () {
     Carbon::setTestNow();
 });
 
+/**
+ * @param  list<string>  $lines
+ */
 function seedUsageLog(string $vaultPath, array $lines): void
 {
-    File::put($vaultPath.'/usage.jsonl', implode("\n", $lines)."\n");
+    File::ensureDirectoryExists($vaultPath.'/.reports');
+    File::put($vaultPath.'/.reports/usage.jsonl', implode("\n", $lines)."\n");
 }
 
 test('no log yet reports that plainly and succeeds', function () {
@@ -30,14 +34,15 @@ test('no log yet reports that plainly and succeeds', function () {
 
 test('a seeded log aggregates into the text report', function () {
     seedUsageLog($this->vaultPath, [
-        '{"v":1,"recorded_at":"2026-07-27T10:00:00+00:00","type":"lookup","outcome":"hit","subject":"monitor","results":1}',
-        '{"v":1,"recorded_at":"2026-07-27T10:05:00+00:00","type":"lookup","outcome":"hit","subject":"monitor","results":1}',
-        '{"v":1,"recorded_at":"2026-07-27T10:10:00+00:00","type":"lookup","outcome":"miss","subject":"plan-cap","results":0}',
+        '{"v":1,"recorded_at":"2026-07-27T10:00:00+00:00","type":"lookup","outcome":"hit","subject":"monitor","results":1,"chars":600}',
+        '{"v":1,"recorded_at":"2026-07-27T10:05:00+00:00","type":"lookup","outcome":"hit","subject":"monitor","results":1,"chars":600}',
+        '{"v":1,"recorded_at":"2026-07-27T10:10:00+00:00","type":"lookup","outcome":"miss","subject":"plan-cap","results":0,"chars":80}',
         'garbage line',
     ]);
 
     $this->artisan('etruscan:usage')
         ->expectsOutputToContain('3 consultation(s), 2 hit(s), 1 miss(es)')
+        ->expectsOutputToContain('Context served: 1,280 chars (~320 tokens, estimated at 4 chars/token)')
         ->expectsOutputToContain('Most consulted nodes')
         ->expectsOutputToContain('plan-cap')
         ->expectsOutputToContain('annotation candidates')
@@ -61,18 +66,20 @@ test('the days window excludes older events', function () {
 
 test('the json output is a machine-readable contract', function () {
     seedUsageLog($this->vaultPath, [
-        '{"v":1,"recorded_at":"2026-07-27T10:00:00+00:00","type":"search","outcome":"miss","subject":"quota logic","results":0}',
+        '{"v":1,"recorded_at":"2026-07-27T10:00:00+00:00","type":"search","outcome":"miss","subject":"quota logic","results":0,"chars":120}',
     ]);
 
     $exitCode = Artisan::call('etruscan:usage', ['--json' => true]);
-    $decoded = json_decode(trim(Artisan::output()), true);
+    $decoded = decodeJson(Artisan::output());
 
     expect($exitCode)->toBe(0);
 
-    expect($decoded)->toHaveKeys(['window_days', 'events', 'by_type', 'by_day', 'hits', 'misses', 'top_nodes', 'missed_subjects', 'empty_searches', 'distinct_nodes_consulted', 'skipped'])
+    expect($decoded)->toHaveKeys(['window_days', 'events', 'by_type', 'by_day', 'hits', 'misses', 'top_nodes', 'missed_subjects', 'empty_searches', 'chars_served', 'estimated_tokens_served', 'distinct_nodes_consulted', 'skipped'])
         ->and($decoded['events'])->toBe(1)
         ->and($decoded['by_day'])->toBe(['2026-07-27' => ['events' => 1, 'misses' => 1]])
-        ->and($decoded['empty_searches'])->toBe(['quota logic' => 1]);
+        ->and($decoded['empty_searches'])->toBe(['quota logic' => 1])
+        ->and($decoded['chars_served'])->toBe(120)
+        ->and($decoded['estimated_tokens_served'])->toBe(30);
 });
 
 test('the html option renders the dashboard into the vault', function () {
@@ -84,10 +91,11 @@ test('the html option renders the dashboard into the vault', function () {
         ->expectsOutputToContain('usage.html')
         ->assertSuccessful();
 
-    $html = File::get($this->vaultPath.'/usage.html');
+    $html = File::get($this->vaultPath.'/.reports/usage.html');
 
     expect($html)->toContain('"events":1')
-        ->and($html)->toContain('"top_nodes":{"monitor":1}');
+        ->and($html)->toContain('"top_nodes":{"monitor":1}')
+        ->and(File::get($this->vaultPath.'/.reports/.gitignore'))->toBe("*\n!.gitignore\n");
 });
 
 test('the output option overrides the dashboard location', function () {
@@ -95,12 +103,13 @@ test('the output option overrides the dashboard location', function () {
         '{"v":1,"recorded_at":"2026-07-27T10:00:00+00:00","type":"lookup","outcome":"hit","subject":"monitor","results":1}',
     ]);
 
-    $outputPath = $this->vaultPath.'/reports/usage-dashboard.html';
+    $outputPath = $this->vaultPath.'/custom/usage-dashboard.html';
 
     $this->artisan('etruscan:usage', ['--html' => true, '--output' => $outputPath])->assertSuccessful();
 
     expect(File::exists($outputPath))->toBeTrue()
-        ->and(File::exists($this->vaultPath.'/usage.html'))->toBeFalse();
+        ->and(File::exists($this->vaultPath.'/.reports/usage.html'))->toBeFalse()
+        ->and(File::exists($this->vaultPath.'/custom/.gitignore'))->toBeFalse();
 });
 
 test('an invalid days option fails loud', function () {

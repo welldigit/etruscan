@@ -48,11 +48,30 @@ afterEach(function () {
 test('the graph page lands in the vault by default with nodes and edges embedded', function () {
     $this->artisan('etruscan:graph')->assertSuccessful();
 
-    $html = File::get($this->vaultPath.'/graph.html');
+    $html = File::get($this->vaultPath.'/.reports/graph.html');
 
     expect($html)->toContain('"id":"graph-alpha"')
         ->toContain('"source":"graph-alpha","target":"graph-beta"')
-        ->toContain('"layer":"action"');
+        ->toContain('"layer":"action"')
+        ->and(File::get($this->vaultPath.'/.reports/.gitignore'))->toBe("*\n!.gitignore\n");
+});
+
+test('node descriptions come from the vault notes, never from docblocks', function () {
+    $this->artisan('etruscan:generate')->assertSuccessful();
+
+    $notePath = $this->vaultPath.'/graph-alpha.md';
+    File::put($notePath, str_replace(
+        '## Description',
+        "## Description\n\nThe human's words about alpha.",
+        File::get($notePath),
+    ));
+
+    $this->artisan('etruscan:graph')->assertSuccessful();
+
+    $html = File::get($this->vaultPath.'/.reports/graph.html');
+
+    expect($html)->toContain("The human's words about alpha.")
+        ->not->toContain('Coordinates the alpha side of the fixture.');
 });
 
 test('the output option overrides the page location', function () {
@@ -61,5 +80,6 @@ test('the output option overrides the page location', function () {
     $this->artisan('etruscan:graph', ['--output' => $outputPath])->assertSuccessful();
 
     expect(File::exists($outputPath))->toBeTrue()
-        ->and(File::exists($this->vaultPath.'/graph.html'))->toBeFalse();
+        ->and(File::exists($this->vaultPath.'/.reports/graph.html'))->toBeFalse()
+        ->and(File::exists($this->vaultPath.'/nested/.gitignore'))->toBeFalse();
 });

@@ -16,6 +16,10 @@ use WellDigit\Etruscan\Services\UsageLogReader;
 use WellDigit\Etruscan\Services\UsagePageRenderer;
 use WellDigit\Etruscan\Services\UsageReportBuilder;
 use WellDigit\Etruscan\Utilities\AbsolutePathResolver;
+use WellDigit\Etruscan\Utilities\EtruscanConfig;
+use WellDigit\Etruscan\Utilities\ReportsDirectoryPreparer;
+use WellDigit\Etruscan\Utilities\ReportsPathResolver;
+use WellDigit\Etruscan\Utilities\TokenEstimator;
 use WellDigit\Etruscan\Utilities\UsageLogPathResolver;
 
 #[Description('Report how AI agents actually use the map: consultations, hot nodes and misses')]
@@ -23,7 +27,7 @@ use WellDigit\Etruscan\Utilities\UsageLogPathResolver;
         {--days= : Only include events recorded in the last N days}
         {--json : Emit the report as JSON}
         {--html : Render the report as a self-contained dashboard page}
-        {--output= : Where to write the dashboard (default: usage.html inside the vault)}')]
+        {--output= : Where to write the dashboard (default: .reports/usage.html inside the vault)}')]
 #[EtruscanNode('etruscan-usage')]
 #[EtruscanLayer('command')]
 #[EtruscanContext('usage')]
@@ -48,7 +52,7 @@ final class EtruscanUsageCommand extends Command
             $windowDays = (int) $daysOption;
         }
 
-        $vaultPath = AbsolutePathResolver::resolve((string) config('etruscan.vault_path', '.etruscan'));
+        $vaultPath = EtruscanConfig::vaultPath();
         $log = $usageLogReader(UsageLogPathResolver::resolve($vaultPath));
 
         $report = $usageReportBuilder(
@@ -67,13 +71,17 @@ final class EtruscanUsageCommand extends Command
 
         if ($this->option('html')) {
             $outputOption = $this->option('output');
+            $customOutput = is_string($outputOption) && $outputOption !== '';
             $outputPath = AbsolutePathResolver::resolve(
-                is_string($outputOption) && $outputOption !== ''
-                    ? $outputOption
-                    : $vaultPath.DIRECTORY_SEPARATOR.'usage.html',
+                $customOutput ? $outputOption : ReportsPathResolver::resolve($vaultPath, 'usage.html'),
             );
 
-            File::ensureDirectoryExists(dirname($outputPath));
+            if ($customOutput) {
+                File::ensureDirectoryExists(dirname($outputPath));
+            } else {
+                ReportsDirectoryPreparer::prepare(dirname($outputPath));
+            }
+
             File::put($outputPath, $usagePageRenderer($report));
 
             $this->info(sprintf('Rendered the usage dashboard (%d event(s)) into %s', $report->events, $outputPath));
@@ -98,6 +106,15 @@ final class EtruscanUsageCommand extends Command
 
         foreach ($usageReport->byType as $type => $count) {
             $this->line(sprintf('  %-9s %d', $type, $count));
+        }
+
+        if ($usageReport->charsServed > 0) {
+            $this->line(sprintf(
+                '  Context served: %s chars (~%s tokens, estimated at %d chars/token)',
+                number_format($usageReport->charsServed),
+                number_format(TokenEstimator::estimate($usageReport->charsServed)),
+                TokenEstimator::CHARS_PER_TOKEN,
+            ));
         }
 
         if ($usageReport->topNodes !== []) {
@@ -143,6 +160,8 @@ final class EtruscanUsageCommand extends Command
             'top_nodes' => $usageReport->topNodes,
             'missed_subjects' => $usageReport->missedSubjects,
             'empty_searches' => $usageReport->emptySearches,
+            'chars_served' => $usageReport->charsServed,
+            'estimated_tokens_served' => TokenEstimator::estimate($usageReport->charsServed),
             'distinct_nodes_consulted' => $usageReport->distinctNodesConsulted,
             'skipped' => [
                 'malformed' => $usageReport->malformedLines,

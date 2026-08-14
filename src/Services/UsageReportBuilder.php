@@ -42,12 +42,14 @@ final readonly class UsageReportBuilder
         $byDay = [];
         $hits = 0;
         $misses = 0;
+        $charsServed = 0;
         $nodeCounts = [];
         $missedSubjects = [];
         $emptySearches = [];
 
         foreach ($events as $usageEvent) {
             $byType[$usageEvent->type->value] = ($byType[$usageEvent->type->value] ?? 0) + 1;
+            $charsServed += $usageEvent->chars;
 
             $day = date('Y-m-d', (int) strtotime($usageEvent->recordedAt));
             $byDay[$day] ??= ['events' => 0, 'misses' => 0];
@@ -89,6 +91,7 @@ final readonly class UsageReportBuilder
             topNodes: array_slice($nodeCounts, 0, self::TOP_LIMIT, preserve_keys: true),
             missedSubjects: array_slice($missedSubjects, 0, self::TOP_LIMIT, preserve_keys: true),
             emptySearches: array_slice($emptySearches, 0, self::TOP_LIMIT, preserve_keys: true),
+            charsServed: $charsServed,
             distinctNodesConsulted: count($nodeCounts),
             malformedLines: $malformedLines,
             newerSchemaLines: $newerSchemaLines,

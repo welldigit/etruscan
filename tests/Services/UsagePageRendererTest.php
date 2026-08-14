@@ -16,6 +16,7 @@ function usageReport(int $events = 3): UsageReport
         topNodes: ['vault-writer' => 2],
         missedSubjects: ['plan-cap' => 1],
         emptySearches: [],
+        charsServed: 840,
         distinctNodesConsulted: 1,
         malformedLines: 0,
         newerSchemaLines: 0,
@@ -30,6 +31,7 @@ test('the dashboard embeds the report as JSON with the expected keys', function 
         ->and($html)->toContain('"top_nodes":{"vault-writer":2}')
         ->and($html)->toContain('"missed_subjects":{"plan-cap":1}')
         ->and($html)->toContain('"by_day":{"2026-07-27":{"events":3,"misses":1}}')
+        ->and($html)->toContain('"chars_served":840')
         ->and($html)->toContain('Etruscan');
 });
 
@@ -43,6 +45,7 @@ test('script-breaking characters in subjects are escaped', function () {
         topNodes: [],
         missedSubjects: ['x</script>y' => 1],
         emptySearches: [],
+        charsServed: 0,
         distinctNodesConsulted: 0,
         malformedLines: 0,
         newerSchemaLines: 0,
@@ -65,6 +68,7 @@ test('empty collections render as JSON objects, not arrays', function () {
         topNodes: [],
         missedSubjects: [],
         emptySearches: [],
+        charsServed: 0,
         distinctNodesConsulted: 0,
         malformedLines: 0,
         newerSchemaLines: 0,

@@ -24,6 +24,7 @@ function usageEvent(string $subject = 'monitor', string $outcome = 'hit'): Usage
         outcome: UsageOutcome::from($outcome),
         subject: $subject,
         results: 1,
+        chars: 420,
         recordedAt: '2026-07-27T10:00:00+00:00',
     );
 }
@@ -42,7 +43,23 @@ test('the first record creates the directory and file with one valid JSON line',
             'outcome' => 'hit',
             'subject' => 'monitor',
             'results' => 1,
+            'chars' => 420,
         ]);
+});
+
+test('the log directory is seeded with a self-ignoring gitignore so usage data stays out of git by default', function () {
+    app(UsageRecorder::class)($this->logPath, usageEvent());
+
+    expect(File::get($this->logDirectory.'/.gitignore'))->toBe("*\n!.gitignore\n");
+});
+
+test('an edited gitignore is never overwritten, so teams can opt into committing the log', function () {
+    File::ensureDirectoryExists($this->logDirectory);
+    File::put($this->logDirectory.'/.gitignore', "!usage.jsonl\n");
+
+    app(UsageRecorder::class)($this->logPath, usageEvent());
+
+    expect(File::get($this->logDirectory.'/.gitignore'))->toBe("!usage.jsonl\n");
 });
 
 test('an oversized subject is truncated so one event cannot bloat the log', function () {
@@ -51,12 +68,14 @@ test('an oversized subject is truncated so one event cannot bloat the log', func
         outcome: UsageOutcome::Miss,
         subject: str_repeat('x', 5000),
         results: 0,
+        chars: 96,
         recordedAt: '2026-07-27T10:00:00+00:00',
     ));
 
-    $row = json_decode(trim(File::get($this->logPath)), true);
+    $row = decodeJson(File::get($this->logPath));
 
-    expect(strlen($row['subject']))->toBe(200);
+    expect($row['subject'])->toBeString()
+        ->and(mb_strlen(is_string($row['subject']) ? $row['subject'] : ''))->toBe(200);
 });
 
 test('appends accumulate as independently decodable lines', function () {
@@ -65,7 +84,7 @@ test('appends accumulate as independently decodable lines', function () {
     $usageRecorder($this->logPath, usageEvent(subject: 'second', outcome: 'miss'));
 
     $rows = array_map(
-        static fn (string $line): mixed => json_decode($line, true),
+        decodeJson(...),
         array_values(array_filter(explode("\n", File::get($this->logPath)))),
     );
 

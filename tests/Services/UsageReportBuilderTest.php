@@ -7,13 +7,14 @@ use WellDigit\Etruscan\Enums\UsageOutcome;
 use WellDigit\Etruscan\Payloads\UsageEvent;
 use WellDigit\Etruscan\Services\UsageReportBuilder;
 
-function reportEvent(string $type, string $outcome, string $subject, string $recordedAt = '2026-07-27T10:00:00+00:00'): UsageEvent
+function reportEvent(string $type, string $outcome, string $subject, string $recordedAt = '2026-07-27T10:00:00+00:00', int $chars = 100): UsageEvent
 {
     return new UsageEvent(
         type: UsageEventType::from($type),
         outcome: UsageOutcome::from($outcome),
         subject: $subject,
         results: 1,
+        chars: $chars,
         recordedAt: $recordedAt,
     );
 }
@@ -39,6 +40,7 @@ test('totals, hit and miss counts, top nodes and miss subjects aggregate correct
         ->and($report->topNodes)->toBe(['monitor' => 2, 'billing' => 1])
         ->and($report->missedSubjects)->toBe(['plan-cap' => 1, 'quota logic' => 1])
         ->and($report->emptySearches)->toBe(['quota logic' => 1])
+        ->and($report->charsServed)->toBe(600)
         ->and($report->distinctNodesConsulted)->toBe(2)
         ->and($report->malformedLines)->toBe(2)
         ->and($report->newerSchemaLines)->toBe(1);
@@ -64,8 +66,8 @@ test('events aggregate per day, chronologically, with the daily miss count', fun
 test('a since cutoff excludes older events', function () {
     $report = (new UsageReportBuilder)(
         events: [
-            reportEvent(type: 'lookup', outcome: 'hit', subject: 'old', recordedAt: '2026-07-01T10:00:00+00:00'),
-            reportEvent(type: 'lookup', outcome: 'hit', subject: 'new', recordedAt: '2026-07-27T10:00:00+00:00'),
+            reportEvent(type: 'lookup', outcome: 'hit', subject: 'old', recordedAt: '2026-07-01T10:00:00+00:00', chars: 900),
+            reportEvent(type: 'lookup', outcome: 'hit', subject: 'new', recordedAt: '2026-07-27T10:00:00+00:00', chars: 250),
         ],
         malformedLines: 0,
         newerSchemaLines: 0,
@@ -75,6 +77,7 @@ test('a since cutoff excludes older events', function () {
 
     expect($report->events)->toBe(1)
         ->and($report->topNodes)->toBe(['new' => 1])
+        ->and($report->charsServed)->toBe(250)
         ->and($report->windowDays)->toBe(7);
 });
 

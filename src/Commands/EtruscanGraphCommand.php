@@ -16,12 +16,15 @@ use WellDigit\Etruscan\Exceptions\ReservedAxisKeyException;
 use WellDigit\Etruscan\Services\CodebaseScanner;
 use WellDigit\Etruscan\Services\GraphPageRenderer;
 use WellDigit\Etruscan\Services\NodeGraphBuilder;
+use WellDigit\Etruscan\Services\VaultDescriptionReader;
 use WellDigit\Etruscan\Utilities\AbsolutePathResolver;
-use WellDigit\Etruscan\Utilities\ScannedFolderResolver;
+use WellDigit\Etruscan\Utilities\EtruscanConfig;
+use WellDigit\Etruscan\Utilities\ReportsDirectoryPreparer;
+use WellDigit\Etruscan\Utilities\ReportsPathResolver;
 
 #[Description('Render the node graph as a self-contained HTML page')]
 #[Signature('etruscan:graph
-        {--output= : Override the output path (default: graph.html inside the vault)}')]
+        {--output= : Override the output path (default: .reports/graph.html inside the vault)}')]
 #[EtruscanNode('etruscan-graph')]
 #[EtruscanLayer('command')]
 #[EtruscanContext('cli')]
@@ -31,29 +34,37 @@ final class EtruscanGraphCommand extends Command
         CodebaseScanner $codebaseScanner,
         NodeGraphBuilder $nodeGraphBuilder,
         GraphPageRenderer $graphPageRenderer,
+        VaultDescriptionReader $vaultDescriptionReader,
     ): int {
-        $scannedFolders = ScannedFolderResolver::resolve(config('etruscan.scanned_folders', ['app', 'src']));
+        $scannedFolders = EtruscanConfig::scannedFolders();
 
         $outputOption = $this->option('output');
-        $outputPath = AbsolutePathResolver::resolve(
-            is_string($outputOption) && $outputOption !== ''
-                ? $outputOption
-                : ((string) config('etruscan.vault_path', '.etruscan')).DIRECTORY_SEPARATOR.'graph.html',
-        );
+        $customOutput = is_string($outputOption) && $outputOption !== '';
+        $outputPath = $customOutput
+            ? AbsolutePathResolver::resolve($outputOption)
+            : ReportsPathResolver::resolve(EtruscanConfig::vaultPath(), 'graph.html');
 
         $this->info('Scanning for attributed classes ...');
 
         $scannedClasses = $codebaseScanner($scannedFolders);
 
         try {
-            $notes = $nodeGraphBuilder($scannedClasses);
+            $notes = $nodeGraphBuilder($scannedClasses, $vaultDescriptionReader(
+                vaultPath: EtruscanConfig::vaultPath(),
+                markerKey: EtruscanConfig::markerKey(),
+            ));
         } catch (AliasCollisionException|ReservedAxisKeyException $exception) {
             $this->error($exception->getMessage());
 
             return self::FAILURE;
         }
 
-        File::ensureDirectoryExists(dirname($outputPath));
+        if ($customOutput) {
+            File::ensureDirectoryExists(dirname($outputPath));
+        } else {
+            ReportsDirectoryPreparer::prepare(dirname($outputPath));
+        }
+
         File::put($outputPath, $graphPageRenderer($notes));
 
         $this->info(sprintf('Rendered graph of %d node(s) into %s', count($notes), $outputPath));

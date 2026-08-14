@@ -20,6 +20,7 @@ final readonly class UsageEvent
      * @param  UsageOutcome  $outcome  Whether the map could answer.
      * @param  string  $subject  The alias or query the agent asked for.
      * @param  int  $results  How many nodes the answer carried.
+     * @param  int  $chars  Size of the served answer in characters.
      * @param  string  $recordedAt  ISO-8601 timestamp, stamped server-side.
      */
     public function __construct(
@@ -27,6 +28,7 @@ final readonly class UsageEvent
         public UsageOutcome $outcome,
         public string $subject,
         public int $results,
+        public int $chars,
         public string $recordedAt,
     ) {}
 }

@@ -9,6 +9,7 @@ use WellDigit\Etruscan\Attributes\EtruscanNode;
 use WellDigit\Etruscan\Attributes\Vocabulary\EtruscanContext;
 use WellDigit\Etruscan\Attributes\Vocabulary\EtruscanLayer;
 use WellDigit\Etruscan\Payloads\UsageReport;
+use WellDigit\Etruscan\Utilities\TokenEstimator;
 
 #[EtruscanNode('usage-page-renderer')]
 #[EtruscanLayer('service')]
@@ -31,6 +32,9 @@ final readonly class UsagePageRenderer
             'top_nodes' => (object) $usageReport->topNodes,
             'missed_subjects' => (object) $usageReport->missedSubjects,
             'empty_searches' => (object) $usageReport->emptySearches,
+            'chars_served' => $usageReport->charsServed,
+            'estimated_tokens_served' => TokenEstimator::estimate($usageReport->charsServed),
+            'chars_per_token' => TokenEstimator::CHARS_PER_TOKEN,
             'distinct_nodes_consulted' => $usageReport->distinctNodesConsulted,
             'skipped' => [
                 'malformed' => $usageReport->malformedLines,

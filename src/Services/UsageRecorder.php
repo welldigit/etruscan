@@ -9,6 +9,7 @@ use WellDigit\Etruscan\Attributes\EtruscanNode;
 use WellDigit\Etruscan\Attributes\Vocabulary\EtruscanContext;
 use WellDigit\Etruscan\Attributes\Vocabulary\EtruscanLayer;
 use WellDigit\Etruscan\Payloads\UsageEvent;
+use WellDigit\Etruscan\Utilities\ReportsDirectoryPreparer;
 
 #[EtruscanNode('usage-recorder')]
 #[EtruscanLayer('service')]
@@ -33,6 +34,7 @@ final readonly class UsageRecorder
             'outcome' => $usageEvent->outcome->value,
             'subject' => mb_substr($usageEvent->subject, 0, self::SUBJECT_MAX_LENGTH),
             'results' => $usageEvent->results,
+            'chars' => $usageEvent->chars,
         ]);
 
         if ($line === false) {
@@ -40,7 +42,7 @@ final readonly class UsageRecorder
         }
 
         try {
-            File::ensureDirectoryExists(dirname($logPath));
+            ReportsDirectoryPreparer::prepare(dirname($logPath));
             File::append($logPath, $line.PHP_EOL, lock: true);
         } catch (\Throwable) {
             // Recording is best-effort by design.

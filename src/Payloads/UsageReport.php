@@ -20,6 +20,7 @@ final readonly class UsageReport
      * @param  array<string, int>  $topNodes  alias => consultations, ranked.
      * @param  array<string, int>  $missedSubjects  wanted alias/query => times asked, ranked.
      * @param  array<string, int>  $emptySearches  query => times it returned nothing.
+     * @param  int  $charsServed  Total characters the map served across all events.
      * @param  int|null  $windowDays  Null when the whole log was read.
      */
     public function __construct(
@@ -31,6 +32,7 @@ final readonly class UsageReport
         public array $topNodes,
         public array $missedSubjects,
         public array $emptySearches,
+        public int $charsServed,
         public int $distinctNodesConsulted,
         public int $malformedLines,
         public int $newerSchemaLines,

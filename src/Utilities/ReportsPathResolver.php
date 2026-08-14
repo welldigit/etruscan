@@ -8,13 +8,15 @@ use WellDigit\Etruscan\Attributes\EtruscanNode;
 use WellDigit\Etruscan\Attributes\Vocabulary\EtruscanContext;
 use WellDigit\Etruscan\Attributes\Vocabulary\EtruscanLayer;
 
-#[EtruscanNode('usage-log-path-resolver')]
+#[EtruscanNode('reports-path-resolver')]
 #[EtruscanLayer('utility')]
 #[EtruscanContext('usage')]
-final class UsageLogPathResolver
+final class ReportsPathResolver
 {
-    public static function resolve(string $vaultPath): string
+    private const string REPORTS_FOLDER = '.reports';
+
+    public static function resolve(string $vaultPath, string $fileName): string
     {
-        return ReportsPathResolver::resolve($vaultPath, 'usage.jsonl');
+        return $vaultPath.DIRECTORY_SEPARATOR.self::REPORTS_FOLDER.DIRECTORY_SEPARATOR.$fileName;
     }
 }

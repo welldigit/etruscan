@@ -89,6 +89,7 @@ final readonly class UsageLogReader
             outcome: $outcome,
             subject: $subject,
             results: is_numeric($row['results'] ?? null) ? (int) $row['results'] : 0,
+            chars: is_numeric($row['chars'] ?? null) ? (int) $row['chars'] : 0,
             recordedAt: $recordedAt,
         );
     }
