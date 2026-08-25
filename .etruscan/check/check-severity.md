@@ -25,5 +25,4 @@ only under --strict).
 - [[check-finding]]
 - [[duplicate-alias-checker]]
 - [[etruscan-check]]
-- [[orphan-node-checker]]
 - [[vocabulary-checker]]

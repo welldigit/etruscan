@@ -10,8 +10,8 @@ generated_by: etruscan
 
 ## Description
 
-The kind of problem a [[check-finding]] describes: duplicate alias, unknown vocabulary, orphan node,
-or broken link.
+The kind of problem a [[check-finding]] describes: duplicate alias, unknown vocabulary, or broken
+link.
 
 ## References
 
@@ -25,5 +25,4 @@ or broken link.
 - [[check-finding]]
 - [[duplicate-alias-checker]]
 - [[etruscan-check]]
-- [[orphan-node-checker]]
 - [[vocabulary-checker]]

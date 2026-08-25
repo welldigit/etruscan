@@ -14,7 +14,7 @@ generated_by: etruscan
 ## Description
 
 Audits the map for the mistakes annotations invite: duplicate aliases, off-vocabulary axis values,
-isolated nodes, and dangling wikilinks.
+and dangling wikilinks.
 
 ## References
 
@@ -29,7 +29,6 @@ isolated nodes, and dangling wikilinks.
 - [[etruscan-layer]]
 - [[etruscan-node]]
 - [[node-graph-builder]]
-- [[orphan-node-checker]]
 - [[vocabulary-checker]]
 
 ## Referenced by

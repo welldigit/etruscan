@@ -15,6 +15,5 @@ enum CheckCategory: string
 {
     case DuplicateAlias = 'duplicate-alias';
     case UnknownVocabulary = 'unknown-vocabulary';
-    case OrphanNode = 'orphan-node';
     case BrokenLink = 'broken-link';
 }

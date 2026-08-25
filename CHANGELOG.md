@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+
+- The isolated-node check from `etruscan:check` — `OrphanNodeChecker` and `CheckCategory::OrphanNode` are gone. It flagged any node with an empty `## References` and `## Referenced by`, but plenty of legitimate leaf classes (show-controllers that only render a view, middleware, framework response classes, console commands) have neither by design, and the checker had no way to tell those apart from a genuinely missed annotation short of wiring in fake dependencies. `etruscan:check` now reports three things instead of four: duplicate aliases, unknown vocabulary, and broken links. Empty references in both directions are allowed. **Breaking** for anyone constructing `OrphanNodeChecker` directly or matching on `CheckCategory::OrphanNode`.
+
 ## [1.1.0] - 2026-08-14
 
 ### Added

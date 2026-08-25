@@ -64,7 +64,7 @@ Bundled axis: the architectural role of the class — action, model, query, serv
 - [[note-parser]]
 - [[note-path-resolver]]
 - [[note-section]]
-- [[orphan-node-checker]]
+- [[note-trust-reminder]]
 - [[parsed-note]]
 - [[reports-directory-preparer]]
 - [[reports-path-resolver]]

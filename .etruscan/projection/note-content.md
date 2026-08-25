@@ -28,6 +28,5 @@ graph rendering) — generation never derives one.
 - [[markdown-note-renderer]]
 - [[node-graph-builder]]
 - [[note-path-resolver]]
-- [[orphan-node-checker]]
 - [[target-folder-counter]]
 - [[vault-writer]]

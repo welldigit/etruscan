@@ -17,15 +17,14 @@ use WellDigit\Etruscan\Services\BrokenLinkChecker;
 use WellDigit\Etruscan\Services\CodebaseScanner;
 use WellDigit\Etruscan\Services\DuplicateAliasChecker;
 use WellDigit\Etruscan\Services\NodeGraphBuilder;
-use WellDigit\Etruscan\Services\OrphanNodeChecker;
 use WellDigit\Etruscan\Services\VocabularyChecker;
 use WellDigit\Etruscan\Utilities\EtruscanConfig;
 
 /**
  * Audits the map for the mistakes annotations invite: duplicate aliases,
- * off-vocabulary axis values, isolated nodes, and dangling wikilinks.
+ * off-vocabulary axis values, and dangling wikilinks.
  */
-#[Description('Check the map for duplicate aliases, unknown vocabulary, orphans and broken links')]
+#[Description('Check the map for duplicate aliases, unknown vocabulary and broken links')]
 #[Signature('etruscan:check {--strict : Fail on warnings too, not just errors}')]
 #[EtruscanNode('etruscan-check')]
 #[EtruscanLayer('command')]
@@ -38,7 +37,6 @@ final class EtruscanCheckCommand extends Command
         NodeGraphBuilder $nodeGraphBuilder,
         DuplicateAliasChecker $duplicateAliasChecker,
         VocabularyChecker $vocabularyChecker,
-        OrphanNodeChecker $orphanNodeChecker,
         BrokenLinkChecker $brokenLinkChecker,
     ): int {
         $scannedFolders = EtruscanConfig::scannedFolders();
@@ -56,13 +54,12 @@ final class EtruscanCheckCommand extends Command
         ];
 
         if ($this->hasDuplicateAlias($findings)) {
-            $this->warn('Skipping orphan and broken-link checks until the duplicate aliases above are resolved.');
+            $this->warn('Skipping the broken-link check until the duplicate aliases above are resolved.');
         } else {
             $notes = $nodeGraphBuilder($scannedClasses);
 
             $findings = [
                 ...$findings,
-                ...$orphanNodeChecker($notes),
                 ...$brokenLinkChecker($vaultPath, $notes),
             ];
         }

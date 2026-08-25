@@ -64,7 +64,7 @@ must be unique codebase-wide; collisions fail the projection loud.
 - [[note-parser]]
 - [[note-path-resolver]]
 - [[note-section]]
-- [[orphan-node-checker]]
+- [[note-trust-reminder]]
 - [[parsed-note]]
 - [[reports-directory-preparer]]
 - [[reports-path-resolver]]

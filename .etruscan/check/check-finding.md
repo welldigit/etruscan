@@ -26,5 +26,4 @@ message. The command groups these for output and derives its exit code from them
 - [[broken-link-checker]]
 - [[duplicate-alias-checker]]
 - [[etruscan-check]]
-- [[orphan-node-checker]]
 - [[vocabulary-checker]]

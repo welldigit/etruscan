@@ -252,12 +252,13 @@ php artisan etruscan:check            # report problems, exit non-zero on errors
 php artisan etruscan:check --strict   # treat warnings as failures too (for CI)
 ```
 
-It reports four things:
+It reports three things:
 
 - **Duplicate aliases** — two classes claiming one alias (an error; generation would also fail loud on it).
 - **Unknown vocabulary** — for any axis listed in the `vocabulary` config, values outside the allowed set (an error, with the closest match suggested). Axes left free-form instead get a fuzzy warning when two values look like a typo of each other (`service` vs `serivce`).
-- **Orphan nodes** — annotated classes with no inbound or outbound links, which often means a missed annotation or a mis-scoped node (a warning).
 - **Broken links** — `[[wikilinks]]` in your manual notes pointing at aliases that no longer exist (an error).
+
+A node with no inbound or outbound links is not flagged: plenty of legitimate leaf classes — show-controllers that only render a view, middleware, framework response classes, console commands — have neither, and there is no way to tell those apart from a genuinely missed annotation short of hand-wiring fake dependencies. Empty `## References` and `## Referenced by` are allowed.
 
 Lock an axis down in config once its taxonomy stabilises:
 
