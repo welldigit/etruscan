@@ -110,8 +110,12 @@ final class TraceNode extends Tool
 
         $lines[] = '';
         $lines[] = 'Referenced by (who uses it):';
+        $lines = array_merge($lines, $this->section($trace['referencedBy']));
 
-        return implode("\n", array_merge($lines, $this->section($trace['referencedBy'])));
+        $lines[] = '';
+        $lines[] = NoteTrustReminder::LINE;
+
+        return implode("\n", $lines);
     }
 
     /**

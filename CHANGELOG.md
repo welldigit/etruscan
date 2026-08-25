@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- A trust-protocol footer on every `lookup-node` and `trace-node` answer, with the same caveat in the MCP server instructions: the description is testimony — authoritative for intent and rationale — while enforcement claims (validation, authorization, expiry) are verified in the source before being repeated. Born from a live A/B run where a map-reading agent repeated a note's overstated validation claim that traced back to a lying controller docblock; a rule read once at session start had faded by tool call 39, so the reminder now travels with every note served. The wording has one owner, `NoteTrustReminder::LINE`, so the two tools cannot drift into different trust stories.
+
+### Changed
+
+- The navigate skill's trust rule is now a claim-class split instead of a soft "verify at source": notes are the authority on intent, rationale, history, and open questions — knowledge that is not in the code and cannot be verified from it — while the source is the authority on anything checkable; an enforcement claim is never repeated from a note without reading the enforcing code (`rules()`, a policy, middleware, the pipeline stage), and when note and source disagree on a checkable fact, the source is right and the description has earned a correction. The annotate skill gains the write-side counterpart: enforcement claims in a description are sourced from the enforcing code — never from a docblock or comment, which can overstate what the code below it does — and attributed to the layer that actually performs the check. The core guideline carries the same caveat in one sentence.
+
 ### Removed
 
 - The isolated-node check from `etruscan:check` — `OrphanNodeChecker` and `CheckCategory::OrphanNode` are gone. It flagged any node with an empty `## References` and `## Referenced by`, but plenty of legitimate leaf classes (show-controllers that only render a view, middleware, framework response classes, console commands) have neither by design, and the checker had no way to tell those apart from a genuinely missed annotation short of wiring in fake dependencies. `etruscan:check` now reports three things instead of four: duplicate aliases, unknown vocabulary, and broken links. Empty references in both directions are allowed. **Breaking** for anyone constructing `OrphanNodeChecker` directly or matching on `CheckCategory::OrphanNode`.

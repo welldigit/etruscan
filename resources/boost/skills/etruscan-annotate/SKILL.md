@@ -193,6 +193,15 @@ over time** with the business rules, constraints, and decisions only they hold.
 Flag the classes whose *why* you cannot source from the code — those are
 prompts for a human to fill in, not gaps to invent over.
 
+**Provenance for enforcement claims.** When a description asserts what is
+validated, authorized, or guarded, read the code that enforces it — the
+`rules()` method, the policy, the middleware, the pipeline stage — never a
+docblock or comment, which can overstate what the code below it actually does.
+A wrong claim written here is repeated by every future reader of the map. And
+attribute enforcement to the layer that performs it: "ownership and expiry are
+enforced downstream in [[checkout-pipeline]]" is a specification; claiming
+them on an intake class that doesn't check them is a defect.
+
 ## Generate and fix
 
 - `php artisan etruscan:generate --dry-run` — see the counts and folder shape
@@ -203,9 +212,10 @@ prompts for a human to fill in, not gaps to invent over.
     rename the axis class.
   - `InvalidGroupingValueException` → an axis value can't become a folder name;
     fix the value.
-- Then generate for real, and `php artisan etruscan:graph` to eyeball clusters
-  and orphans — an isolated node often means a missed reference or a mis-scoped
-  domain.
+- Then generate for real, and `php artisan etruscan:graph` to eyeball clusters.
+  A node with no links isn't automatically wrong — plenty of leaf classes
+  legitimately have neither inbound nor outbound references — but it's worth a
+  glance in case it's actually a missed reference or a mis-scoped domain.
 - Before extending an existing map, run `php artisan etruscan:usage` and read
   the **misses** — the exact aliases and queries agents asked the map for and
   didn't get. They are pre-validated annotation candidates: absorb them first.
@@ -226,7 +236,9 @@ prompts for a human to fill in, not gaps to invent over.
 7. **The Description is manual — never derived, never invented.** Docblocks are
    code documentation and never flow into the vault. Write each specification
    into the note itself, claim only what the code and context back, and flag
-   the rest for the human rather than inventing intent.
+   the rest for the human rather than inventing intent. For enforcement
+   claims, "what the code backs" means the enforcing code itself — never a
+   docblock's summary of it — attributed to the layer that performs the check.
 
 ## Worked example
 

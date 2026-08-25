@@ -25,6 +25,7 @@ suggests the closest aliases.
 - [[identity-frontmatter-key]]
 - [[map-reader]]
 - [[node-lookup]]
+- [[note-trust-reminder]]
 - [[parsed-note]]
 - [[usage-event-type]]
 - [[usage-outcome]]

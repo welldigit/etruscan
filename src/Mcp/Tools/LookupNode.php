@@ -134,6 +134,9 @@ final class LookupNode extends Tool
             $lines[] = 'Open the implementation at: '.$source;
         }
 
+        $lines[] = '';
+        $lines[] = NoteTrustReminder::LINE;
+
         return implode("\n", $lines);
     }
 }

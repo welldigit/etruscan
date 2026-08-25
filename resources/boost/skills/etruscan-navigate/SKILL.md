@@ -115,7 +115,8 @@ axis (`config('etruscan.group_by')`); wikilinks resolve identically either way.
    unfilled slot worth filling, not a generator fault), frontmatter for role
    (`layer`, `context`…), and any manual notes below `## References`.
 3. Need implementation detail? Open the file at `source`. The note is a
-   signpost, never a substitute.
+   signpost, never a substitute — and on anything checkable (what is
+   validated, authorized, guarded), the code is the authority, not the prose.
 
 **Map the whole codebase / a subsystem**
 
@@ -157,7 +158,7 @@ axis (`config('etruscan.group_by')`); wikilinks resolve identically either way.
   regenerate (or tell the human to). Regeneration never touches descriptions —
   they are the human's.
 - Suspect the map is inconsistent? `php artisan etruscan:check` reports
-  duplicate aliases, off-vocabulary axis values, orphan nodes, and broken
+  duplicate aliases, off-vocabulary axis values, and broken
   `[[wikilinks]]` — run it rather than eyeballing.
 
 **A meaningful class has no note**
@@ -186,8 +187,16 @@ axis (`config('etruscan.group_by')`); wikilinks resolve identically either way.
 4. **Axes are lenses, not truth.** `layer`/`domain`/`context`/`slice` (and any
    `EtruscanAxis` subclass) describe how the graph is sliced; the reference edges
    come from real code references. Don't infer runtime behavior from taxonomy alone.
-5. **Descriptions are trustworthy; still verify at source** before making
-   claims about implementation details.
+5. **Notes and source are authoritative for different claims.** A description
+   is testimony — authoritative for intent, rationale, history, and open
+   questions: knowledge that is not in the code and cannot be verified from it.
+   For enforcement claims — validation, authorization, ownership, expiry,
+   uniqueness, state transitions — the source is the authority: never repeat
+   one from a note without reading the code that enforces it (`rules()`, a
+   policy, middleware, the pipeline stage). A description can inherit an
+   overstated docblock or lag a refactor; the enforcing code cannot. When note
+   and source disagree on a checkable fact, the source is right — and the
+   description has earned a correction (rule 1).
 
 ## Worked example
 

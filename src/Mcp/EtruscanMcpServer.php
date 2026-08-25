@@ -28,9 +28,11 @@ final class EtruscanMcpServer extends Server
         dependency links in both directions. Consult the map BEFORE crawling source
         files. Use map-overview to orient in the codebase, search-map to find nodes
         by name or concept, lookup-node to read one node in full (then open its
-        source path), and trace-node to follow dependencies. Lookups are recorded
-        locally so the team can see which nodes matter and what is missing from the
-        map — nothing leaves the machine.
+        source path), and trace-node to follow dependencies. Descriptions are human
+        testimony — trust them for intent and rationale, and verify enforcement
+        claims (validation, authorization, expiry) in the source before repeating
+        them. Lookups are recorded locally so the team can see which nodes matter
+        and what is missing from the map — nothing leaves the machine.
         TEXT;
 
     /**

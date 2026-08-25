@@ -24,6 +24,7 @@ files.
 - [[etruscan-node]]
 - [[map-reader]]
 - [[node-trace]]
+- [[note-trust-reminder]]
 - [[trace-direction]]
 - [[usage-event-type]]
 - [[usage-outcome]]

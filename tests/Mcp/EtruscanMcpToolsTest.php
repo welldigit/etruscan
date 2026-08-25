@@ -8,6 +8,7 @@ use Laravel\Mcp\Request;
 use WellDigit\Etruscan\Mcp\Services\MapReader;
 use WellDigit\Etruscan\Mcp\Tools\LookupNode;
 use WellDigit\Etruscan\Mcp\Tools\MapOverview;
+use WellDigit\Etruscan\Mcp\Tools\NoteTrustReminder;
 use WellDigit\Etruscan\Mcp\Tools\SearchMap;
 use WellDigit\Etruscan\Mcp\Tools\TraceNode;
 
@@ -91,7 +92,8 @@ test('lookup-node returns the full note and records a hit', function () {
         ->and($text)->toContain('Creates a monitor after guarding the plan cap.')
         ->and($text)->toContain('References: monitor')
         ->and($text)->toContain('Human wisdom below.')
-        ->and($text)->toContain('src/MonitorCreate.php');
+        ->and($text)->toContain('src/MonitorCreate.php')
+        ->and($text)->toContain(NoteTrustReminder::LINE);
 
     $lines = usageLines($this->vaultPath);
 
@@ -107,7 +109,8 @@ test('lookup-node records a ground-truth miss with suggestions for an unknown al
     $text = (string) $response->content();
 
     expect($text)->toContain('No node')
-        ->and($text)->toContain('monitor-create');
+        ->and($text)->toContain('monitor-create')
+        ->and($text)->not->toContain(NoteTrustReminder::LINE);
 
     $lines = usageLines($this->vaultPath);
 
@@ -147,7 +150,8 @@ test('trace-node walks both directions with descriptions', function () {
 
     expect($text)->toContain('Referenced by (who uses it):')
         ->and($text)->toContain('monitor-create')
-        ->and($text)->toContain('Creates a monitor after guarding the plan cap.');
+        ->and($text)->toContain('Creates a monitor after guarding the plan cap.')
+        ->and($text)->toContain(NoteTrustReminder::LINE);
 });
 
 test('map-overview groups nodes by axis', function () {
