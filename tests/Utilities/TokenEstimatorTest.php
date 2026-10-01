@@ -6,7 +6,23 @@ use WellDigit\Etruscan\Utilities\TokenEstimator;
 
 test('characters are converted at the documented ratio', function () {
     expect(TokenEstimator::estimate(400))->toBe(100)
-        ->and(TokenEstimator::CHARS_PER_TOKEN)->toBe(4);
+        ->and(TokenEstimator::DEFAULT_CHARS_PER_TOKEN)->toBe(4);
+});
+
+// The default is optimistic for alias- and FQCN-dense payloads, so a project
+// that has actually counted its own can correct it without a code change.
+test('a calibrated ratio overrides the default', function () {
+    config()->set('etruscan.chars_per_token', 3);
+
+    expect(TokenEstimator::estimate(300))->toBe(100);
+});
+
+test('a nonsense ratio falls back rather than dividing by zero', function () {
+    config()->set('etruscan.chars_per_token', 0);
+    expect(TokenEstimator::estimate(400))->toBe(400);
+
+    config()->set('etruscan.chars_per_token', 'four');
+    expect(TokenEstimator::estimate(400))->toBe(100);
 });
 
 test('the estimate rounds rather than truncates', function () {

@@ -14,18 +14,13 @@ Single source of truth for the identity keys stamped on every note (alias, class
 source). Both the frontmatter generation and the reserved-key guard read from it, so they can never
 drift apart.
 
-## References
-
-- [[etruscan-context]]
-- [[etruscan-layer]]
-- [[etruscan-node]]
-
 ## Referenced by
 
+- [[context-footprint-calculator]]
 - [[graph-page-renderer]]
 - [[lookup-node]]
 - [[map-overview-builder]]
 - [[map-search]]
 - [[node-graph-builder]]
+- [[node-summary-line]]
 - [[note-parser]]
-- [[search-map]]

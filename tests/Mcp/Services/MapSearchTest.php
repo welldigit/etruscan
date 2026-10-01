@@ -52,3 +52,29 @@ test('an unmatched query returns an empty list', function () {
 test('a blank query returns nothing rather than everything', function () {
     expect((new MapSearch)(['a' => searchNote(alias: 'a')], '   '))->toBe([]);
 });
+
+test('a spaced, hyphenated or namespaced query finds the kebab alias', function () {
+    $notesByAlias = [
+        'monitor' => searchNote(alias: 'monitor', class: 'Monitor'),
+        'monitor-create' => searchNote(alias: 'monitor-create', class: 'MonitorCreate'),
+    ];
+
+    foreach (['monitor create', 'monitor-create', 'Monitor_Create'] as $query) {
+        expect(array_map(fn ($parsedNote) => $parsedNote->alias, (new MapSearch)($notesByAlias, $query)))->toBe(['monitor-create']);
+    }
+});
+
+test('every word must match somewhere on a note, not necessarily in one field', function () {
+    $notesByAlias = [
+        'invoice-send' => searchNote(alias: 'invoice-send', axes: ['domain' => 'billing']),
+        'invoice-void' => searchNote(alias: 'invoice-void'),
+    ];
+
+    expect(array_map(fn ($parsedNote) => $parsedNote->alias, (new MapSearch)($notesByAlias, 'billing invoice')))->toBe(['invoice-send']);
+});
+
+test('the generation marker is not searchable as an axis', function () {
+    $note = searchNote(alias: 'a', axes: ['generated_by' => 'etruscan']);
+
+    expect((new MapSearch)(['a' => $note], 'etruscan'))->toBe([]);
+});

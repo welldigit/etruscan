@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Illuminate\Support\Facades\File;
 use WellDigit\Etruscan\Utilities\EtruscanConfig;
 
 test('the vault path is resolved absolute against the app base path', function () {
@@ -68,4 +69,50 @@ test('an unconfigured or null usage_tracking stays on — silence is not a switc
 
     config()->offsetUnset('etruscan.usage_tracking');
     expect(EtruscanConfig::usageTracking())->toBeTrue();
+});
+
+test('unset scanned folders scan the conventional roots that exist, and only those', function () {
+    $basePath = sys_get_temp_dir().'/etruscan-roots-'.uniqid();
+    File::ensureDirectoryExists($basePath.'/app');
+    $originalBasePath = base_path();
+    app()->setBasePath($basePath);
+    config()->set('etruscan.scanned_folders', null);
+
+    try {
+        expect(EtruscanConfig::scannedFolders())->toBe([$basePath.'/app']);
+
+        File::ensureDirectoryExists($basePath.'/src');
+        expect(EtruscanConfig::scannedFolders())->toBe([$basePath.'/app', $basePath.'/src']);
+    } finally {
+        app()->setBasePath($originalBasePath);
+        File::deleteDirectory($basePath);
+    }
+});
+
+test('with no conventional root present, app is kept so the gap is still reported', function () {
+    $basePath = sys_get_temp_dir().'/etruscan-roots-'.uniqid();
+    File::ensureDirectoryExists($basePath);
+    $originalBasePath = base_path();
+    app()->setBasePath($basePath);
+    config()->set('etruscan.scanned_folders', null);
+
+    try {
+        expect(EtruscanConfig::scannedFolders())->toBe([$basePath.'/app']);
+    } finally {
+        app()->setBasePath($originalBasePath);
+        File::deleteDirectory($basePath);
+    }
+});
+
+test('an explicit scanned-folder list is strict: missing entries are kept', function () {
+    config()->set('etruscan.scanned_folders', ['app', 'definitely-missing']);
+
+    expect(EtruscanConfig::scannedFolders())->toBe([base_path('app'), base_path('definitely-missing')]);
+});
+
+test('a blank scanned-folders env reads as unset, never as "scan nothing"', function () {
+    config()->set('etruscan.scanned_folders', '  ');
+
+    expect(EtruscanConfig::scannedFolders())->not->toBe([])
+        ->and(EtruscanConfig::scannedFolders())->toContain(base_path('app'));
 });

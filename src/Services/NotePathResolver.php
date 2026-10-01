@@ -4,15 +4,12 @@ declare(strict_types=1);
 
 namespace WellDigit\Etruscan\Services;
 
-use WellDigit\Etruscan\Attributes\EtruscanNode;
-use WellDigit\Etruscan\Attributes\Vocabulary\EtruscanContext;
-use WellDigit\Etruscan\Attributes\Vocabulary\EtruscanLayer;
 use WellDigit\Etruscan\Exceptions\InvalidGroupingValueException;
 use WellDigit\Etruscan\Payloads\NoteContent;
 
-#[EtruscanNode('note-path-resolver')]
-#[EtruscanLayer('service')]
-#[EtruscanContext('vault')]
+#[\EtruscanNode('note-path-resolver')]
+#[\EtruscanLayer('service')]
+#[\EtruscanContext('vault')]
 final readonly class NotePathResolver
 {
     /**

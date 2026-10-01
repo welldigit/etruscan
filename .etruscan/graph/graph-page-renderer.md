@@ -16,11 +16,7 @@ deterministic, and the JSON is escaped so a description cannot break out of the 
 
 ## References
 
-- [[etruscan-context]]
-- [[etruscan-layer]]
-- [[etruscan-node]]
 - [[identity-frontmatter-key]]
-- [[note-content]]
 
 ## Referenced by
 

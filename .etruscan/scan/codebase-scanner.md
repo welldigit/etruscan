@@ -10,17 +10,15 @@ generated_by: etruscan
 
 ## Description
 
-Walks the configured folders and statically parses every PHP file into [[scanned-class]] facts.
-Nothing is autoloaded or executed; unparseable files are logged and skipped, and missing folders are
-ignored harmlessly.
+Parses PHP in configured roots into per-class facts, collecting content hashes and scan diagnostics.
+Duplicate files from overlapping roots are scanned once. Unparseable files are logged and skipped
+during discovery; generation checks those diagnostics before writing. Axis recognition uses Composer
+autoloading.
 
 ## References
 
 - [[axis-attribute-reader]]
 - [[class-fact-collector]]
-- [[etruscan-context]]
-- [[etruscan-layer]]
-- [[etruscan-node]]
 - [[scanned-class]]
 
 ## Referenced by

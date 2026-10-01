@@ -17,11 +17,7 @@ generation marker are never touched.
 
 ## References
 
-- [[etruscan-context]]
-- [[etruscan-layer]]
-- [[etruscan-node]]
 - [[markdown-note-renderer]]
-- [[note-content]]
 - [[note-parser]]
 - [[note-path-resolver]]
 

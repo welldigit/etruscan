@@ -12,13 +12,8 @@ generated_by: etruscan
 
 Which way to walk the graph from a node: out (its references), in (its referrers), or both.
 
-## References
-
-- [[etruscan-context]]
-- [[etruscan-layer]]
-- [[etruscan-node]]
-
 ## Referenced by
 
 - [[node-trace]]
+- [[source-reference-trace]]
 - [[trace-node]]

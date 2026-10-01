@@ -18,9 +18,6 @@ show one, the graph page first among them, comes here rather than back to the co
 
 ## References
 
-- [[etruscan-context]]
-- [[etruscan-layer]]
-- [[etruscan-node]]
 - [[vault-reader]]
 
 ## Referenced by

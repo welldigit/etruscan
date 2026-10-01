@@ -5,15 +5,12 @@ declare(strict_types=1);
 namespace WellDigit\Etruscan\Services;
 
 use Illuminate\Support\Facades\File;
-use WellDigit\Etruscan\Attributes\EtruscanNode;
-use WellDigit\Etruscan\Attributes\Vocabulary\EtruscanContext;
-use WellDigit\Etruscan\Attributes\Vocabulary\EtruscanLayer;
 use WellDigit\Etruscan\Enums\IdentityFrontmatterKey;
 use WellDigit\Etruscan\Payloads\NoteContent;
 
-#[EtruscanNode('graph-page-renderer')]
-#[EtruscanLayer('service')]
-#[EtruscanContext('graph')]
+#[\EtruscanNode('graph-page-renderer')]
+#[\EtruscanLayer('service')]
+#[\EtruscanContext('graph')]
 final readonly class GraphPageRenderer
 {
     private const string DATA_PLACEHOLDER = '__ETRUSCAN_DATA__';

@@ -17,15 +17,11 @@ drive-letter, or UNC-style). The one place base_path() is ever applied — every
 override, and CLI option for scan folders, vault path, and graph output funnels through here, so
 relative and absolute inputs behave identically everywhere.
 
-## References
-
-- [[etruscan-context]]
-- [[etruscan-layer]]
-- [[etruscan-node]]
-
 ## Referenced by
 
+- [[context-footprint-calculator]]
 - [[etruscan-config]]
+- [[etruscan-export]]
 - [[etruscan-graph]]
 - [[etruscan-usage]]
 - [[scanned-folder-resolver]]

@@ -5,13 +5,10 @@ declare(strict_types=1);
 namespace WellDigit\Etruscan\Exceptions;
 
 use RuntimeException;
-use WellDigit\Etruscan\Attributes\EtruscanNode;
-use WellDigit\Etruscan\Attributes\Vocabulary\EtruscanContext;
-use WellDigit\Etruscan\Attributes\Vocabulary\EtruscanLayer;
 
-#[EtruscanNode('alias-collision')]
-#[EtruscanLayer('exception')]
-#[EtruscanContext('projection')]
+#[\EtruscanNode('alias-collision')]
+#[\EtruscanLayer('exception')]
+#[\EtruscanContext('projection')]
 final class AliasCollisionException extends RuntimeException
 {
     private function __construct(string $message)

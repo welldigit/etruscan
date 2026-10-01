@@ -16,9 +16,6 @@ measured.
 
 ## References
 
-- [[etruscan-context]]
-- [[etruscan-layer]]
-- [[etruscan-node]]
 - [[reports-directory-preparer]]
 - [[usage-event]]
 

@@ -20,9 +20,6 @@ so what gets recorded is by construction the text that actually left the tool.
 ## References
 
 - [[etruscan-config]]
-- [[etruscan-context]]
-- [[etruscan-layer]]
-- [[etruscan-node]]
 - [[usage-event]]
 - [[usage-event-type]]
 - [[usage-log-path-resolver]]

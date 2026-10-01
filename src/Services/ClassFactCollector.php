@@ -7,16 +7,14 @@ namespace WellDigit\Etruscan\Services;
 use PhpParser\Node\Stmt;
 use PhpParser\NodeTraverser;
 use PhpParser\NodeVisitor\NameResolver;
-use WellDigit\Etruscan\Attributes\EtruscanNode;
-use WellDigit\Etruscan\Attributes\Vocabulary\EtruscanContext;
-use WellDigit\Etruscan\Attributes\Vocabulary\EtruscanLayer;
+use PhpParser\NodeVisitor\ParentConnectingVisitor;
 
 /**
  * @phpstan-import-type ClassFact from ClassFactVisitor
  */
-#[EtruscanNode('class-fact-collector')]
-#[EtruscanLayer('service')]
-#[EtruscanContext('scan')]
+#[\EtruscanNode('class-fact-collector')]
+#[\EtruscanLayer('service')]
+#[\EtruscanContext('scan')]
 final readonly class ClassFactCollector
 {
     /**
@@ -29,6 +27,7 @@ final readonly class ClassFactCollector
 
         $nodeTraverser = new NodeTraverser;
         $nodeTraverser->addVisitor(new NameResolver(null, ['replaceNodes' => false]));
+        $nodeTraverser->addVisitor(new ParentConnectingVisitor);
         $nodeTraverser->addVisitor($classFactVisitor);
         $nodeTraverser->traverse($ast);
 

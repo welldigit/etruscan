@@ -5,35 +5,38 @@ declare(strict_types=1);
 namespace WellDigit\Etruscan\Services;
 
 use Illuminate\Support\Facades\File;
-use WellDigit\Etruscan\Attributes\EtruscanNode;
-use WellDigit\Etruscan\Attributes\Vocabulary\EtruscanContext;
-use WellDigit\Etruscan\Attributes\Vocabulary\EtruscanLayer;
 use WellDigit\Etruscan\Enums\UsageEventType;
 use WellDigit\Etruscan\Enums\UsageOutcome;
 use WellDigit\Etruscan\Payloads\UsageEvent;
 
-#[EtruscanNode('usage-log-reader')]
-#[EtruscanLayer('service')]
-#[EtruscanContext('usage')]
+#[\EtruscanNode('usage-log-reader')]
+#[\EtruscanLayer('service')]
+#[\EtruscanContext('usage')]
 final readonly class UsageLogReader
 {
     /**
      * Tolerant by design: malformed lines and lines written by a newer
-     * schema are skipped and counted, never fatal.
+     * schema are skipped and counted, never fatal. Reads the rotated
+     * generation (`{log}.1`) too, so a rotation does not empty the report.
      *
      * @return array{events: list<UsageEvent>, malformed: int, newerSchema: int}
      */
     public function __invoke(string $logPath): array
     {
-        if (! File::exists($logPath)) {
-            return ['events' => [], 'malformed' => 0, 'newerSchema' => 0];
+        $contents = '';
+
+        // The rotated generation first, so events stay in recording order.
+        foreach ([$logPath.UsageRecorder::ROTATED_SUFFIX, $logPath] as $path) {
+            if (File::exists($path)) {
+                $contents .= File::get($path)."\n";
+            }
         }
 
         $events = [];
         $malformed = 0;
         $newerSchema = 0;
 
-        foreach (preg_split('/\R/', File::get($logPath)) ?: [] as $line) {
+        foreach (preg_split('/\R/', $contents) ?: [] as $line) {
             if (trim($line) === '') {
                 continue;
             }

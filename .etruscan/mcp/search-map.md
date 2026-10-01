@@ -19,13 +19,9 @@ annotation signal the system produces.
 
 - [[consultation-recorder]]
 - [[etruscan-config]]
-- [[etruscan-context]]
-- [[etruscan-layer]]
-- [[etruscan-node]]
-- [[identity-frontmatter-key]]
 - [[map-reader]]
 - [[map-search]]
-- [[parsed-note]]
+- [[node-summary-line]]
 - [[usage-event-type]]
 - [[usage-outcome]]
 
@@ -33,3 +29,4 @@ annotation signal the system produces.
 
 - [[etruscan-mcp-server]]
 - [[etruscan-service-provider]]
+- [[etruscan-usage]]

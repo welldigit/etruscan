@@ -5,15 +5,13 @@ declare(strict_types=1);
 namespace WellDigit\Etruscan\Services;
 
 use Illuminate\Support\Facades\File;
-use WellDigit\Etruscan\Attributes\EtruscanNode;
-use WellDigit\Etruscan\Attributes\Vocabulary\EtruscanContext;
-use WellDigit\Etruscan\Attributes\Vocabulary\EtruscanLayer;
 use WellDigit\Etruscan\Payloads\UsageReport;
+use WellDigit\Etruscan\Utilities\EtruscanConfig;
 use WellDigit\Etruscan\Utilities\TokenEstimator;
 
-#[EtruscanNode('usage-page-renderer')]
-#[EtruscanLayer('service')]
-#[EtruscanContext('usage')]
+#[\EtruscanNode('usage-page-renderer')]
+#[\EtruscanLayer('service')]
+#[\EtruscanContext('usage')]
 final readonly class UsagePageRenderer
 {
     private const string DATA_PLACEHOLDER = '__ETRUSCAN_DATA__';
@@ -34,7 +32,7 @@ final readonly class UsagePageRenderer
             'empty_searches' => (object) $usageReport->emptySearches,
             'chars_served' => $usageReport->charsServed,
             'estimated_tokens_served' => TokenEstimator::estimate($usageReport->charsServed),
-            'chars_per_token' => TokenEstimator::CHARS_PER_TOKEN,
+            'chars_per_token' => EtruscanConfig::charsPerToken(),
             'distinct_nodes_consulted' => $usageReport->distinctNodesConsulted,
             'skipped' => [
                 'malformed' => $usageReport->malformedLines,

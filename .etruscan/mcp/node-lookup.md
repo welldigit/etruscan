@@ -13,13 +13,6 @@ generated_by: etruscan
 Alias resolution behind [[lookup-node]]: exact hit, or the closest aliases by edit distance and
 substring — the suggestions that turn a near-miss into a next call instead of a dead end.
 
-## References
-
-- [[etruscan-context]]
-- [[etruscan-layer]]
-- [[etruscan-node]]
-- [[parsed-note]]
-
 ## Referenced by
 
 - [[lookup-node]]

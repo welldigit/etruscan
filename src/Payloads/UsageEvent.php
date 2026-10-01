@@ -4,15 +4,12 @@ declare(strict_types=1);
 
 namespace WellDigit\Etruscan\Payloads;
 
-use WellDigit\Etruscan\Attributes\EtruscanNode;
-use WellDigit\Etruscan\Attributes\Vocabulary\EtruscanContext;
-use WellDigit\Etruscan\Attributes\Vocabulary\EtruscanLayer;
 use WellDigit\Etruscan\Enums\UsageEventType;
 use WellDigit\Etruscan\Enums\UsageOutcome;
 
-#[EtruscanNode('usage-event')]
-#[EtruscanLayer('payload')]
-#[EtruscanContext('usage')]
+#[\EtruscanNode('usage-event')]
+#[\EtruscanLayer('payload')]
+#[\EtruscanContext('usage')]
 final readonly class UsageEvent
 {
     /**

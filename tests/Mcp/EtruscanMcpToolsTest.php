@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Illuminate\Support\Facades\File;
 use Laravel\Mcp\Facades\Mcp;
 use Laravel\Mcp\Request;
+use WellDigit\Etruscan\Enums\TraceDirection;
 use WellDigit\Etruscan\Mcp\Services\MapReader;
 use WellDigit\Etruscan\Mcp\Tools\LookupNode;
 use WellDigit\Etruscan\Mcp\Tools\MapOverview;
@@ -148,7 +149,7 @@ test('trace-node walks both directions with descriptions', function () {
     $response = app(TraceNode::class)->handle(new Request(['alias' => 'monitor']));
     $text = (string) $response->content();
 
-    expect($text)->toContain('Referenced by (who uses it):')
+    expect($text)->toContain('Referenced by (annotated nodes):')
         ->and($text)->toContain('monitor-create')
         ->and($text)->toContain('Creates a monitor after guarding the plan cap.')
         ->and($text)->toContain(NoteTrustReminder::LINE);
@@ -161,6 +162,48 @@ test('map-overview groups nodes by axis', function () {
     expect($text)->toContain('2 nodes on the map')
         ->and($text)->toContain('grouped by [context]')
         ->and($text)->toContain('monitor-create');
+});
+
+// A silent substitution is the same defect as a silent truncation: the reply
+// looks like the answer to the question that was asked.
+test('a requested axis that is on no node says which axis it used instead', function () {
+    $text = (string) app(MapOverview::class)->handle(new Request(['axis' => 'domain']))->content();
+
+    expect($text)->toContain('No node carries [domain]')
+        ->and($text)->toContain('grouped by [layer]')
+        ->and($text)->toContain('Axes on this map: context, layer.');
+});
+
+test('an unknown group names the groups that exist', function () {
+    $text = (string) app(MapOverview::class)->handle(new Request(['group' => 'nope']))->content();
+
+    expect($text)->toContain('No group [nope]')
+        ->and($text)->toContain('Groups: monitor.');
+});
+
+test('group counts above the node count explain themselves', function () {
+    File::put($this->vaultPath.'/shared.md', implode("\n", [
+        '---',
+        'alias: shared',
+        'class: Shared',
+        'source: src/Shared.php',
+        'layer: service',
+        'context:',
+        '  - monitor',
+        '  - billing',
+        'generated_by: etruscan',
+        '---',
+        '',
+        '## Description',
+        '',
+        'Serves two contexts.',
+    ])."\n");
+
+    $text = (string) app(MapOverview::class)->handle(new Request([]))->content();
+
+    expect($text)->toContain('3 nodes on the map')
+        ->and($text)->toContain('Group counts total 4')
+        ->and($text)->toContain('listed under each');
 });
 
 test('disabled usage tracking answers normally but records nothing', function () {
@@ -188,8 +231,8 @@ test('every tool declares its arguments, and the required ones are marked requir
     $schemas = [
         LookupNode::class => ['alias'],
         SearchMap::class => ['query'],
-        TraceNode::class => ['alias', 'direction'],
-        MapOverview::class => ['axis'],
+        TraceNode::class => ['alias', 'direction', 'evidence_offset', 'evidence_limit', 'descriptions'],
+        MapOverview::class => ['axis', 'group'],
     ];
 
     foreach ($schemas as $tool => $arguments) {
@@ -198,6 +241,27 @@ test('every tool declares its arguments, and the required ones are marked requir
         expect($properties)->toBeArray()
             ->and(array_keys(is_array($properties) ? $properties : []))->toBe($arguments, $tool);
     }
+});
+
+// The advertised schema is contract too: a client that never sees the enum
+// sends a free string, and laravel/mcp does not validate arguments against
+// inputSchema, so both the hint and its runtime guard have to hold.
+test('the advertised schema carries the constrained values, not only the names', function () {
+    $trace = app(TraceNode::class)->toArray()['inputSchema']['properties'] ?? [];
+    $overview = app(MapOverview::class)->toArray()['inputSchema']['properties'] ?? [];
+
+    $trace = is_array($trace) ? $trace : [];
+    $overview = is_array($overview) ? $overview : [];
+
+    expect($trace['direction'] ?? null)->toMatchArray([
+        'enum' => array_column(TraceDirection::cases(), 'value'),
+        'default' => TraceDirection::Both->value,
+    ])
+        ->and($trace['descriptions'] ?? null)->toMatchArray([
+            'type' => 'integer',
+            'minimum' => 0,
+        ])
+        ->and($overview['axis'] ?? null)->toMatchArray(['default' => 'context']);
 });
 
 test('a blank required argument is refused with a usable instruction', function () {
@@ -265,6 +329,6 @@ test('a long description is truncated in search results so one node cannot crowd
 test('a miss with nothing close falls back to the annotate instruction alone', function () {
     $text = (string) app(LookupNode::class)->handle(new Request(['alias' => 'zzzzzzzz']))->content();
 
-    expect($text)->toContain('#[EtruscanNode]')
+    expect($text)->toContain("#[\\EtruscanNode('alias')]")
         ->and($text)->not->toContain('Closest aliases');
 });

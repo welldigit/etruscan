@@ -23,7 +23,7 @@ beforeEach(function () {
          */
         #[EtruscanNode('graph-alpha')]
         #[EtruscanLayer('action')]
-        final class Alpha {}
+        final class Alpha { public function __construct(private Beta $beta) {} }
         PHP);
     File::put($this->fixtureDirectory.'/Beta.php', <<<'PHP'
         <?php

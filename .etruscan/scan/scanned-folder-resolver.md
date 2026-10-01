@@ -17,9 +17,6 @@ through [[absolute-path-resolver]].
 ## References
 
 - [[absolute-path-resolver]]
-- [[etruscan-context]]
-- [[etruscan-layer]]
-- [[etruscan-node]]
 
 ## Referenced by
 

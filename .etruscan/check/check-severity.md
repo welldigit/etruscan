@@ -13,16 +13,13 @@ generated_by: etruscan
 Whether a [[check-finding]] is an error (fails the command, gates CI) or a warning (reported, fails
 only under --strict).
 
-## References
-
-- [[etruscan-context]]
-- [[etruscan-layer]]
-- [[etruscan-node]]
-
 ## Referenced by
 
 - [[broken-link-checker]]
 - [[check-finding]]
+- [[digest-staleness-checker]]
 - [[duplicate-alias-checker]]
 - [[etruscan-check]]
+- [[structural-map-checker]]
+- [[unresolved-attribute-checker]]
 - [[vocabulary-checker]]

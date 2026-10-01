@@ -8,22 +8,25 @@ use Illuminate\Support\Facades\Log;
 use PhpParser\Error;
 use PhpParser\ParserFactory;
 use Symfony\Component\Finder\Finder;
-use WellDigit\Etruscan\Attributes\EtruscanNode;
-use WellDigit\Etruscan\Attributes\Vocabulary\EtruscanContext;
-use WellDigit\Etruscan\Attributes\Vocabulary\EtruscanLayer;
 use WellDigit\Etruscan\Payloads\ScannedClass;
 
 /**
  * @phpstan-import-type ClassFact from ClassFactVisitor
  */
-#[EtruscanNode('codebase-scanner')]
-#[EtruscanLayer('service')]
-#[EtruscanContext('scan')]
-final readonly class CodebaseScanner
+#[\EtruscanNode('codebase-scanner')]
+#[\EtruscanLayer('service')]
+#[\EtruscanContext('scan')]
+final class CodebaseScanner
 {
+    /** @var list<string> Diagnostics from the most recent scan. */
+    public array $issues = [];
+
+    /** @var array<string, string> Hashes of the exact file contents parsed. */
+    public array $sourceHashes = [];
+
     public function __construct(
-        private AxisAttributeReader $axisAttributeReader,
-        private ClassFactCollector $classFactCollector,
+        private readonly AxisAttributeReader $axisAttributeReader,
+        private readonly ClassFactCollector $classFactCollector,
     ) {}
 
     /**
@@ -32,6 +35,15 @@ final readonly class CodebaseScanner
      */
     public function __invoke(array $roots): array
     {
+        $this->issues = [];
+        $this->sourceHashes = [];
+
+        foreach ($roots as $root) {
+            if (! is_dir($root)) {
+                $this->issues[] = 'Missing scan root: '.$root;
+            }
+        }
+
         $directories = array_values(array_filter($roots, is_dir(...)));
 
         if ($directories === []) {
@@ -42,12 +54,20 @@ final readonly class CodebaseScanner
 
         $scannedClasses = [];
 
-        foreach (Finder::create()->files()->name('*.php')->in($directories) as $file) {
+        foreach (Finder::create()->files()->name('*.php')->in($directories)->sortByName() as $file) {
             $path = $file->getRealPath() !== false ? $file->getRealPath() : $file->getPathname();
 
+            if (isset($this->sourceHashes[$path])) {
+                continue;
+            }
+
+            $contents = $file->getContents();
+            $this->sourceHashes[$path] = hash('sha256', $contents);
+
             try {
-                $ast = $parser->parse($file->getContents());
+                $ast = $parser->parse($contents);
             } catch (Error $error) {
+                $this->issues[] = 'Unparseable file: '.$path;
                 Log::warning(sprintf(
                     'Etruscan: skipping unparseable file %s: %s',
                     $path,
@@ -67,7 +87,7 @@ final readonly class CodebaseScanner
                 $scannedClasses[] = $this->mapToScannedClass(
                     classFact: $classFact,
                     path: $path,
-                    references: $fileFacts['references'],
+                    references: array_map(static fn ($evidence): string => $evidence->target, $classFact['evidence']),
                 );
             }
         }
@@ -109,6 +129,7 @@ final readonly class CodebaseScanner
             sourcePath: $path,
             alias: $alias,
             extendsFqcn: $classFact['extends'],
+            evidence: $classFact['evidence'],
         );
     }
 }

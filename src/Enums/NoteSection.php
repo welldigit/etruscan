@@ -4,18 +4,14 @@ declare(strict_types=1);
 
 namespace WellDigit\Etruscan\Enums;
 
-use WellDigit\Etruscan\Attributes\EtruscanNode;
-use WellDigit\Etruscan\Attributes\Vocabulary\EtruscanContext;
-use WellDigit\Etruscan\Attributes\Vocabulary\EtruscanLayer;
-
 /**
  * The structured sections a note is parsed and rendered by. References and
  * Referenced by are derived from code and rewritten on every generation;
  * Description is human-written and only ever carried, never rewritten.
  */
-#[EtruscanNode('note-section')]
-#[EtruscanLayer('enum')]
-#[EtruscanContext('projection')]
+#[\EtruscanNode('note-section')]
+#[\EtruscanLayer('enum')]
+#[\EtruscanContext('projection')]
 enum NoteSection: string
 {
     case Description = 'Description';

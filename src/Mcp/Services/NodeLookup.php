@@ -4,14 +4,11 @@ declare(strict_types=1);
 
 namespace WellDigit\Etruscan\Mcp\Services;
 
-use WellDigit\Etruscan\Attributes\EtruscanNode;
-use WellDigit\Etruscan\Attributes\Vocabulary\EtruscanContext;
-use WellDigit\Etruscan\Attributes\Vocabulary\EtruscanLayer;
 use WellDigit\Etruscan\Payloads\ParsedNote;
 
-#[EtruscanNode('node-lookup')]
-#[EtruscanLayer('service')]
-#[EtruscanContext('mcp')]
+#[\EtruscanNode('node-lookup')]
+#[\EtruscanLayer('service')]
+#[\EtruscanContext('mcp')]
 final readonly class NodeLookup
 {
     private const int SUGGESTION_DISTANCE = 4;

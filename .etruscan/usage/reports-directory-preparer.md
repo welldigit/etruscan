@@ -15,14 +15,9 @@ Creates the `.reports` folder on first use and seeds it with a self-ignoring `.g
 promise enforced by the filesystem, not by documentation. The seed is written only when the file is
 missing: a team that wants to commit the log edits the file, and their edit is never overwritten.
 
-## References
-
-- [[etruscan-context]]
-- [[etruscan-layer]]
-- [[etruscan-node]]
-
 ## Referenced by
 
 - [[etruscan-graph]]
 - [[etruscan-usage]]
+- [[reference-index]]
 - [[usage-recorder]]

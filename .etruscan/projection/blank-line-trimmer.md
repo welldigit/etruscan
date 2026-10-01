@@ -18,12 +18,6 @@ an indented code block to prose and leaves the rest of the block indented. The r
 parser sit on opposite ends of every regeneration, so both trim by line through here — that shared
 rule is what lets a human description survive the round trip byte-for-byte.
 
-## References
-
-- [[etruscan-context]]
-- [[etruscan-layer]]
-- [[etruscan-node]]
-
 ## Referenced by
 
 - [[markdown-note-renderer]]

@@ -11,17 +11,13 @@ generated_by: etruscan
 
 ## Description
 
-php-parser visitor gathering the raw facts of one parsed file: each named class with its parent and
-attributes, plus the file's class references — imports, type hints, instantiations, attributes.
-Docblocks are deliberately not read: descriptions are human-written in the vault, never harvested
-from source. Runs after a NameResolver (replaceNodes: false), so names carry resolved FQCNs.
-Anonymous classes and function/const imports are skipped.
+Collects named classes and usage evidence within each class after name resolution and parent
+linking. Class stacks isolate neighbouring and anonymous bodies; unused imports and function or
+constant names do not become class references. Docblocks are not used as description input.
 
 ## References
 
-- [[etruscan-context]]
-- [[etruscan-layer]]
-- [[etruscan-node]]
+- [[reference-evidence]]
 
 ## Referenced by
 

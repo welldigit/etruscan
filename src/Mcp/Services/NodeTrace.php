@@ -4,15 +4,12 @@ declare(strict_types=1);
 
 namespace WellDigit\Etruscan\Mcp\Services;
 
-use WellDigit\Etruscan\Attributes\EtruscanNode;
-use WellDigit\Etruscan\Attributes\Vocabulary\EtruscanContext;
-use WellDigit\Etruscan\Attributes\Vocabulary\EtruscanLayer;
 use WellDigit\Etruscan\Enums\TraceDirection;
 use WellDigit\Etruscan\Payloads\ParsedNote;
 
-#[EtruscanNode('node-trace')]
-#[EtruscanLayer('service')]
-#[EtruscanContext('mcp')]
+#[\EtruscanNode('node-trace')]
+#[\EtruscanLayer('service')]
+#[\EtruscanContext('mcp')]
 final readonly class NodeTrace
 {
     /**

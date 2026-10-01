@@ -19,10 +19,6 @@ alias was renamed or a node removed.
 - [[check-category]]
 - [[check-finding]]
 - [[check-severity]]
-- [[etruscan-context]]
-- [[etruscan-layer]]
-- [[etruscan-node]]
-- [[note-content]]
 
 ## Referenced by
 

@@ -13,20 +13,10 @@ generated_by: etruscan
 One vault note as read from disk: identity frontmatter, description, human notes, and both edge
 lists. What [[vault-reader]] returns and every MCP tool consumes.
 
-## References
-
-- [[etruscan-context]]
-- [[etruscan-layer]]
-- [[etruscan-node]]
-
 ## Referenced by
 
 - [[lookup-node]]
 - [[map-overview-builder]]
-- [[map-reader]]
 - [[map-search]]
-- [[node-lookup]]
-- [[node-trace]]
+- [[node-summary-line]]
 - [[note-parser]]
-- [[search-map]]
-- [[vault-reader]]

@@ -17,11 +17,10 @@ one-line change rather than a hunt across three surfaces.
 
 ## References
 
-- [[etruscan-context]]
-- [[etruscan-layer]]
-- [[etruscan-node]]
+- [[etruscan-config]]
 
 ## Referenced by
 
+- [[etruscan-config]]
 - [[etruscan-usage]]
 - [[usage-page-renderer]]

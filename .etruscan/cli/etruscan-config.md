@@ -22,20 +22,27 @@ of the package, which is what kept static analysis pinned below level 9.
 ## References
 
 - [[absolute-path-resolver]]
-- [[etruscan-context]]
-- [[etruscan-layer]]
-- [[etruscan-node]]
 - [[scanned-folder-resolver]]
+- [[token-estimator]]
 
 ## Referenced by
 
 - [[consultation-recorder]]
+- [[digest-staleness-checker]]
 - [[etruscan-check]]
+- [[etruscan-export]]
 - [[etruscan-generate]]
 - [[etruscan-graph]]
 - [[etruscan-usage]]
 - [[lookup-node]]
 - [[map-overview]]
 - [[map-reader]]
+- [[map-search]]
+- [[reference-index]]
 - [[search-map]]
+- [[source-freshness]]
+- [[source-reference-trace]]
+- [[structural-map-checker]]
+- [[token-estimator]]
 - [[trace-node]]
+- [[usage-page-renderer]]

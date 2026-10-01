@@ -1,0 +1,14 @@
+{
+  "name": "welldigit",
+  "owner": {
+    "name": "Well Digit",
+    "url": "https://welldigit.com"
+  },
+  "plugins": [
+    {
+      "name": "etruscan",
+      "source": "./plugin",
+      "description": "Read a Laravel codebase through its Etruscan map."
+    }
+  ]
+}

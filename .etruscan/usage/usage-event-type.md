@@ -12,12 +12,6 @@ generated_by: etruscan
 
 Which MCP tool answered: lookup, search, trace or overview.
 
-## References
-
-- [[etruscan-context]]
-- [[etruscan-layer]]
-- [[etruscan-node]]
-
 ## Referenced by
 
 - [[consultation-recorder]]

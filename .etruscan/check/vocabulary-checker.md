@@ -19,10 +19,6 @@ a small edit distance of each other are flagged as a likely typo fragmenting the
 - [[check-category]]
 - [[check-finding]]
 - [[check-severity]]
-- [[etruscan-context]]
-- [[etruscan-layer]]
-- [[etruscan-node]]
-- [[scanned-class]]
 
 ## Referenced by
 

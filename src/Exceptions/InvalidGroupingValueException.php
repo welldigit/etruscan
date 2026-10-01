@@ -5,13 +5,10 @@ declare(strict_types=1);
 namespace WellDigit\Etruscan\Exceptions;
 
 use RuntimeException;
-use WellDigit\Etruscan\Attributes\EtruscanNode;
-use WellDigit\Etruscan\Attributes\Vocabulary\EtruscanContext;
-use WellDigit\Etruscan\Attributes\Vocabulary\EtruscanLayer;
 
-#[EtruscanNode('invalid-grouping-value')]
-#[EtruscanLayer('exception')]
-#[EtruscanContext('vault')]
+#[\EtruscanNode('invalid-grouping-value')]
+#[\EtruscanLayer('exception')]
+#[\EtruscanContext('vault')]
 final class InvalidGroupingValueException extends RuntimeException
 {
     private function __construct(string $message)

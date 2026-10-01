@@ -19,13 +19,12 @@ files.
 
 - [[consultation-recorder]]
 - [[etruscan-config]]
-- [[etruscan-context]]
-- [[etruscan-layer]]
-- [[etruscan-node]]
 - [[map-reader]]
 - [[node-trace]]
 - [[note-trust-reminder]]
+- [[source-reference-trace]]
 - [[trace-direction]]
+- [[truncation-notice]]
 - [[usage-event-type]]
 - [[usage-outcome]]
 
@@ -33,3 +32,4 @@ files.
 
 - [[etruscan-mcp-server]]
 - [[etruscan-service-provider]]
+- [[etruscan-usage]]

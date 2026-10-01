@@ -7,29 +7,30 @@ namespace WellDigit\Etruscan\Commands;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
-use WellDigit\Etruscan\Attributes\EtruscanNode;
-use WellDigit\Etruscan\Attributes\Vocabulary\EtruscanContext;
-use WellDigit\Etruscan\Attributes\Vocabulary\EtruscanLayer;
 use WellDigit\Etruscan\Enums\CheckCategory;
 use WellDigit\Etruscan\Enums\CheckSeverity;
 use WellDigit\Etruscan\Payloads\CheckFinding;
 use WellDigit\Etruscan\Services\BrokenLinkChecker;
 use WellDigit\Etruscan\Services\CodebaseScanner;
+use WellDigit\Etruscan\Services\DigestStalenessChecker;
 use WellDigit\Etruscan\Services\DuplicateAliasChecker;
 use WellDigit\Etruscan\Services\NodeGraphBuilder;
+use WellDigit\Etruscan\Services\StructuralMapChecker;
+use WellDigit\Etruscan\Services\UnresolvedAttributeChecker;
 use WellDigit\Etruscan\Services\VocabularyChecker;
 use WellDigit\Etruscan\Utilities\EtruscanConfig;
 
 /**
  * Audits the map for the mistakes annotations invite: duplicate aliases,
- * off-vocabulary axis values, and dangling wikilinks.
+ * off-vocabulary axis values, dangling wikilinks, and an exported index that
+ * has fallen behind the notes it indexes.
  */
-#[Description('Check the map for duplicate aliases, unknown vocabulary and broken links')]
-#[Signature('etruscan:check {--strict : Fail on warnings too, not just errors}')]
-#[EtruscanNode('etruscan-check')]
-#[EtruscanLayer('command')]
-#[EtruscanContext('check')]
-#[EtruscanContext('cli')]
+#[Description('Check source-to-map drift, scan diagnostics, vocabulary, links and exported content')]
+#[Signature('etruscan:check {--strict : Fail on warnings too, not just errors} {--fresh : Require generated structure to match current source, including a missing vault}')]
+#[\EtruscanNode('etruscan-check')]
+#[\EtruscanLayer('command')]
+#[\EtruscanContext('check')]
+#[\EtruscanContext('cli')]
 final class EtruscanCheckCommand extends Command
 {
     public function handle(
@@ -38,6 +39,9 @@ final class EtruscanCheckCommand extends Command
         DuplicateAliasChecker $duplicateAliasChecker,
         VocabularyChecker $vocabularyChecker,
         BrokenLinkChecker $brokenLinkChecker,
+        DigestStalenessChecker $digestStalenessChecker,
+        StructuralMapChecker $structuralMapChecker,
+        UnresolvedAttributeChecker $unresolvedAttributeChecker,
     ): int {
         $scannedFolders = EtruscanConfig::scannedFolders();
         $vaultPath = EtruscanConfig::vaultPath();
@@ -50,8 +54,18 @@ final class EtruscanCheckCommand extends Command
 
         $findings = [
             ...$duplicateAliasChecker($scannedClasses),
+            ...$unresolvedAttributeChecker($scannedClasses),
             ...$vocabularyChecker($scannedClasses, $vocabulary),
+            ...$digestStalenessChecker($vaultPath),
         ];
+
+        foreach ($codebaseScanner->issues as $issue) {
+            $findings[] = new CheckFinding(
+                CheckCategory::ScanIncomplete,
+                str_starts_with($issue, 'Unparseable file:') ? CheckSeverity::Error : CheckSeverity::Warning,
+                $issue,
+            );
+        }
 
         if ($this->hasDuplicateAlias($findings)) {
             $this->warn('Skipping the broken-link check until the duplicate aliases above are resolved.');
@@ -60,6 +74,7 @@ final class EtruscanCheckCommand extends Command
 
             $findings = [
                 ...$findings,
+                ...((is_dir($vaultPath) || $this->option('fresh')) ? $structuralMapChecker($vaultPath, $notes) : []),
                 ...$brokenLinkChecker($vaultPath, $notes),
             ];
         }

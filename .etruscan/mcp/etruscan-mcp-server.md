@@ -18,9 +18,6 @@ structurally instead of being globbed.
 
 ## References
 
-- [[etruscan-context]]
-- [[etruscan-layer]]
-- [[etruscan-node]]
 - [[lookup-node]]
 - [[map-overview]]
 - [[search-map]]

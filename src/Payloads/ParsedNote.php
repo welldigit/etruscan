@@ -4,13 +4,9 @@ declare(strict_types=1);
 
 namespace WellDigit\Etruscan\Payloads;
 
-use WellDigit\Etruscan\Attributes\EtruscanNode;
-use WellDigit\Etruscan\Attributes\Vocabulary\EtruscanContext;
-use WellDigit\Etruscan\Attributes\Vocabulary\EtruscanLayer;
-
-#[EtruscanNode('parsed-note')]
-#[EtruscanLayer('payload')]
-#[EtruscanContext('vault')]
+#[\EtruscanNode('parsed-note')]
+#[\EtruscanLayer('payload')]
+#[\EtruscanContext('vault')]
 final readonly class ParsedNote
 {
     /**
@@ -20,6 +16,7 @@ final readonly class ParsedNote
      * @param  string  $manual  Human content outside the generated sections.
      * @param  list<string>  $links  Aliases listed under References.
      * @param  list<string>  $referencedBy  Aliases listed under Referenced by.
+     * @param  string|null  $path  Where the note lives, app-relative; null when parsed from a string rather than read from the vault.
      */
     public function __construct(
         public ?string $alias,
@@ -28,5 +25,6 @@ final readonly class ParsedNote
         public string $manual,
         public array $links,
         public array $referencedBy,
+        public ?string $path = null,
     ) {}
 }

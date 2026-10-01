@@ -15,9 +15,6 @@ counted, never fatal — the report always states what it could not read.
 
 ## References
 
-- [[etruscan-context]]
-- [[etruscan-layer]]
-- [[etruscan-node]]
 - [[usage-event]]
 - [[usage-event-type]]
 - [[usage-outcome]]

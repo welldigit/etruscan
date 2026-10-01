@@ -4,15 +4,12 @@ declare(strict_types=1);
 
 namespace WellDigit\Etruscan\Mcp\Services;
 
-use WellDigit\Etruscan\Attributes\EtruscanNode;
-use WellDigit\Etruscan\Attributes\Vocabulary\EtruscanContext;
-use WellDigit\Etruscan\Attributes\Vocabulary\EtruscanLayer;
 use WellDigit\Etruscan\Enums\IdentityFrontmatterKey;
 use WellDigit\Etruscan\Payloads\ParsedNote;
 
-#[EtruscanNode('map-overview-builder')]
-#[EtruscanLayer('service')]
-#[EtruscanContext('mcp')]
+#[\EtruscanNode('map-overview-builder')]
+#[\EtruscanLayer('service')]
+#[\EtruscanContext('mcp')]
 final readonly class MapOverviewBuilder
 {
     /**
@@ -20,8 +17,12 @@ final readonly class MapOverviewBuilder
      * land under "(none)". Falls back to the first axis present on any note
      * when the requested axis appears nowhere.
      *
+     * The resolved axis and the axes actually available both come back, so the
+     * caller can tell the reader it got a different axis than it asked for.
+     * The fallback is good default-tolerant behaviour; doing it silently is not.
+     *
      * @param  array<string, ParsedNote>  $notesByAlias
-     * @return array{axis: string, groups: array<string, list<string>>}
+     * @return array{axis: string, available: list<string>, groups: array<string, list<string>>}
      */
     public function __invoke(array $notesByAlias, string $axis, string $markerKey): array
     {
@@ -47,7 +48,36 @@ final readonly class MapOverviewBuilder
 
         ksort($groups);
 
-        return ['axis' => $axis, 'groups' => $groups];
+        return [
+            'axis' => $axis,
+            'available' => $this->availableAxes(notesByAlias: $notesByAlias, markerKey: $markerKey),
+            'groups' => $groups,
+        ];
+    }
+
+    /**
+     * Every axis key carried by at least one note, sorted — what a reader can
+     * legitimately ask for.
+     *
+     * @param  array<string, ParsedNote>  $notesByAlias
+     * @return list<string>
+     */
+    private function availableAxes(array $notesByAlias, string $markerKey): array
+    {
+        $axes = [];
+
+        foreach ($notesByAlias as $parsedNote) {
+            foreach (array_keys($parsedNote->frontmatter) as $key) {
+                if (! IdentityFrontmatterKey::isReserved($key) && $key !== $markerKey) {
+                    $axes[$key] = true;
+                }
+            }
+        }
+
+        $available = array_keys($axes);
+        sort($available);
+
+        return $available;
     }
 
     /**

@@ -4,15 +4,12 @@ declare(strict_types=1);
 
 namespace WellDigit\Etruscan\Utilities;
 
-use WellDigit\Etruscan\Attributes\EtruscanNode;
-use WellDigit\Etruscan\Attributes\Vocabulary\EtruscanContext;
-use WellDigit\Etruscan\Attributes\Vocabulary\EtruscanLayer;
 use WellDigit\Etruscan\Payloads\NoteContent;
 use WellDigit\Etruscan\Services\NotePathResolver;
 
-#[EtruscanNode('target-folder-counter')]
-#[EtruscanLayer('utility')]
-#[EtruscanContext('vault')]
+#[\EtruscanNode('target-folder-counter')]
+#[\EtruscanLayer('utility')]
+#[\EtruscanContext('vault')]
 final class TargetFolderCounter
 {
     /**

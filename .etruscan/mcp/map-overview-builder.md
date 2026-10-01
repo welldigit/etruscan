@@ -16,12 +16,10 @@ requested one appears nowhere — identity keys and the generation marker never 
 
 ## References
 
-- [[etruscan-context]]
-- [[etruscan-layer]]
-- [[etruscan-node]]
 - [[identity-frontmatter-key]]
 - [[parsed-note]]
 
 ## Referenced by
 
+- [[map-digest-renderer]]
 - [[map-overview]]

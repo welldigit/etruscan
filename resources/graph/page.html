@@ -95,7 +95,7 @@ canvas.dragging { cursor: grabbing; }
     if (nodes.length === 0) {
         const empty = document.createElement('div');
         empty.className = 'empty';
-        empty.textContent = 'No nodes — annotate classes with #[EtruscanNode] and regenerate.';
+        empty.textContent = 'No nodes — annotate classes with #[\\EtruscanNode(\'alias\')] and regenerate.';
         document.body.appendChild(empty);
     }
 

@@ -16,6 +16,3 @@ Bundled axis: the business area that owns the class — booking, invoice, monito
 ## References
 
 - [[etruscan-axis]]
-- [[etruscan-context]]
-- [[etruscan-layer]]
-- [[etruscan-node]]

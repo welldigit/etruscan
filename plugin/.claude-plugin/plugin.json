@@ -1,0 +1,13 @@
+{
+  "name": "etruscan",
+  "description": "Read a Laravel codebase through its Etruscan map: a committed markdown vault of one note per meaningful class, with human-written intent and dependency edges derived from real code.",
+  "version": "1.3.0",
+  "author": {
+    "name": "Well Digit",
+    "url": "https://welldigit.com"
+  },
+  "homepage": "https://etruscan.dev",
+  "repository": "https://github.com/welldigit/etruscan",
+  "license": "MIT",
+  "keywords": ["laravel", "php", "codebase-map", "documentation", "navigation"]
+}

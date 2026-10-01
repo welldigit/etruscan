@@ -93,3 +93,27 @@ test('appends accumulate as independently decodable lines', function () {
         ->and($rows[1]['subject'])->toBe('second')
         ->and($rows[1]['outcome'])->toBe('miss');
 });
+
+test('a log at its cap rotates to one previous generation before the next append', function () {
+    $usageRecorder = new UsageRecorder(maxLogBytes: 100);
+
+    $usageRecorder($this->logPath, usageEvent(subject: 'first'));
+    $usageRecorder($this->logPath, usageEvent(subject: 'second'));
+    $usageRecorder($this->logPath, usageEvent(subject: 'third'));
+
+    expect(File::get($this->logPath.UsageRecorder::ROTATED_SUFFIX))->toContain('"subject":"second"')
+        ->and(File::get($this->logPath))->toContain('"subject":"third"')
+        ->and(File::get($this->logPath))->not->toContain('"subject":"second"')
+        ->and(File::exists($this->logPath.'.2'))->toBeFalse();
+});
+
+test('recording goes through a sidecar lock that survives rotation', function () {
+    $usageRecorder = new UsageRecorder(maxLogBytes: 100);
+
+    $usageRecorder($this->logPath, usageEvent(subject: 'first'));
+    $usageRecorder($this->logPath, usageEvent(subject: 'second'));
+
+    expect(File::exists($this->logPath.'.lock'))->toBeTrue()
+        ->and(File::get($this->logPath.UsageRecorder::ROTATED_SUFFIX))->toContain('"subject":"first"')
+        ->and(File::get($this->logPath))->toContain('"subject":"second"');
+});

@@ -5,13 +5,10 @@ declare(strict_types=1);
 namespace WellDigit\Etruscan\Exceptions;
 
 use RuntimeException;
-use WellDigit\Etruscan\Attributes\EtruscanNode;
-use WellDigit\Etruscan\Attributes\Vocabulary\EtruscanContext;
-use WellDigit\Etruscan\Attributes\Vocabulary\EtruscanLayer;
 
-#[EtruscanNode('reserved-axis-key')]
-#[EtruscanLayer('exception')]
-#[EtruscanContext('taxonomy')]
+#[\EtruscanNode('reserved-axis-key')]
+#[\EtruscanLayer('exception')]
+#[\EtruscanContext('taxonomy')]
 final class ReservedAxisKeyException extends RuntimeException
 {
     private function __construct(string $message)

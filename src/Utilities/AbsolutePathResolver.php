@@ -4,14 +4,10 @@ declare(strict_types=1);
 
 namespace WellDigit\Etruscan\Utilities;
 
-use WellDigit\Etruscan\Attributes\EtruscanNode;
-use WellDigit\Etruscan\Attributes\Vocabulary\EtruscanContext;
-use WellDigit\Etruscan\Attributes\Vocabulary\EtruscanLayer;
-
-#[EtruscanNode('absolute-path-resolver')]
-#[EtruscanLayer('utility')]
-#[EtruscanContext('vault')]
-#[EtruscanContext('scan')]
+#[\EtruscanNode('absolute-path-resolver')]
+#[\EtruscanLayer('utility')]
+#[\EtruscanContext('vault')]
+#[\EtruscanContext('scan')]
 final class AbsolutePathResolver
 {
     public static function resolve(string $path): string

@@ -13,8 +13,9 @@ generated_by: etruscan
 
 ## Description
 
-Audits the map for the mistakes annotations invite: duplicate aliases, off-vocabulary axis values,
-and dangling wikilinks.
+Audits the map for the mistakes annotations invite: duplicate aliases, attributes that resolve to no
+class because a leading backslash or an import is missing, off-vocabulary axis values, dangling
+wikilinks, and an exported index that has fallen behind the notes it indexes.
 
 ## References
 
@@ -23,12 +24,12 @@ and dangling wikilinks.
 - [[check-finding]]
 - [[check-severity]]
 - [[codebase-scanner]]
+- [[digest-staleness-checker]]
 - [[duplicate-alias-checker]]
 - [[etruscan-config]]
-- [[etruscan-context]]
-- [[etruscan-layer]]
-- [[etruscan-node]]
 - [[node-graph-builder]]
+- [[structural-map-checker]]
+- [[unresolved-attribute-checker]]
 - [[vocabulary-checker]]
 
 ## Referenced by

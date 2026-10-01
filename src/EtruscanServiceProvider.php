@@ -7,11 +7,9 @@ namespace WellDigit\Etruscan;
 use Laravel\Mcp\Facades\Mcp;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
-use WellDigit\Etruscan\Attributes\EtruscanNode;
-use WellDigit\Etruscan\Attributes\Vocabulary\EtruscanContext;
-use WellDigit\Etruscan\Attributes\Vocabulary\EtruscanLayer;
 use WellDigit\Etruscan\Commands\EtruscanCheckCommand;
 use WellDigit\Etruscan\Commands\EtruscanCommand;
+use WellDigit\Etruscan\Commands\EtruscanExportCommand;
 use WellDigit\Etruscan\Commands\EtruscanGraphCommand;
 use WellDigit\Etruscan\Commands\EtruscanMcpCommand;
 use WellDigit\Etruscan\Commands\EtruscanUsageCommand;
@@ -20,10 +18,11 @@ use WellDigit\Etruscan\Mcp\Tools\LookupNode;
 use WellDigit\Etruscan\Mcp\Tools\MapOverview;
 use WellDigit\Etruscan\Mcp\Tools\SearchMap;
 use WellDigit\Etruscan\Mcp\Tools\TraceNode;
+use WellDigit\Etruscan\Services\ReferenceIndex;
 
-#[EtruscanNode('etruscan-service-provider')]
-#[EtruscanLayer('provider')]
-#[EtruscanContext('cli')]
+#[\EtruscanNode('etruscan-service-provider')]
+#[\EtruscanLayer('provider')]
+#[\EtruscanContext('cli')]
 final class EtruscanServiceProvider extends PackageServiceProvider
 {
     public function configurePackage(Package $package): void
@@ -35,9 +34,19 @@ final class EtruscanServiceProvider extends PackageServiceProvider
                 EtruscanCommand::class,
                 EtruscanGraphCommand::class,
                 EtruscanCheckCommand::class,
+                EtruscanExportCommand::class,
                 EtruscanMcpCommand::class,
                 EtruscanUsageCommand::class,
             );
+    }
+
+    /**
+     * Scoped, so the map reader and the evidence trace serving one tool call
+     * share a single decode of the local index.
+     */
+    public function packageRegistered(): void
+    {
+        $this->app->scoped(ReferenceIndex::class);
     }
 
     public function packageBooted(): void

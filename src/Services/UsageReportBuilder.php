@@ -4,17 +4,14 @@ declare(strict_types=1);
 
 namespace WellDigit\Etruscan\Services;
 
-use WellDigit\Etruscan\Attributes\EtruscanNode;
-use WellDigit\Etruscan\Attributes\Vocabulary\EtruscanContext;
-use WellDigit\Etruscan\Attributes\Vocabulary\EtruscanLayer;
 use WellDigit\Etruscan\Enums\UsageEventType;
 use WellDigit\Etruscan\Enums\UsageOutcome;
 use WellDigit\Etruscan\Payloads\UsageEvent;
 use WellDigit\Etruscan\Payloads\UsageReport;
 
-#[EtruscanNode('usage-report-builder')]
-#[EtruscanLayer('service')]
-#[EtruscanContext('usage')]
+#[\EtruscanNode('usage-report-builder')]
+#[\EtruscanLayer('service')]
+#[\EtruscanContext('usage')]
 final readonly class UsageReportBuilder
 {
     private const int TOP_LIMIT = 10;

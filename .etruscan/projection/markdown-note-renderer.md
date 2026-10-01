@@ -18,9 +18,6 @@ byte-for-byte), References as wikilinks, and any carried-over manual content bel
 ## References
 
 - [[blank-line-trimmer]]
-- [[etruscan-context]]
-- [[etruscan-layer]]
-- [[etruscan-node]]
 - [[note-content]]
 - [[note-section]]
 

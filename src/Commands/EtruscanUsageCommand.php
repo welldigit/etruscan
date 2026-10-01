@@ -8,13 +8,17 @@ use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
-use WellDigit\Etruscan\Attributes\EtruscanNode;
-use WellDigit\Etruscan\Attributes\Vocabulary\EtruscanContext;
-use WellDigit\Etruscan\Attributes\Vocabulary\EtruscanLayer;
+use WellDigit\Etruscan\Mcp\Tools\LookupNode;
+use WellDigit\Etruscan\Mcp\Tools\MapOverview;
+use WellDigit\Etruscan\Mcp\Tools\SearchMap;
+use WellDigit\Etruscan\Mcp\Tools\TraceNode;
+use WellDigit\Etruscan\Payloads\ContextFootprint;
 use WellDigit\Etruscan\Payloads\UsageReport;
+use WellDigit\Etruscan\Services\ContextFootprintCalculator;
 use WellDigit\Etruscan\Services\UsageLogReader;
 use WellDigit\Etruscan\Services\UsagePageRenderer;
 use WellDigit\Etruscan\Services\UsageReportBuilder;
+use WellDigit\Etruscan\Services\VaultReader;
 use WellDigit\Etruscan\Utilities\AbsolutePathResolver;
 use WellDigit\Etruscan\Utilities\EtruscanConfig;
 use WellDigit\Etruscan\Utilities\ReportsDirectoryPreparer;
@@ -28,16 +32,18 @@ use WellDigit\Etruscan\Utilities\UsageLogPathResolver;
         {--json : Emit the report as JSON}
         {--html : Render the report as a self-contained dashboard page}
         {--output= : Where to write the dashboard (default: .reports/usage.html inside the vault)}')]
-#[EtruscanNode('etruscan-usage')]
-#[EtruscanLayer('command')]
-#[EtruscanContext('usage')]
-#[EtruscanContext('cli')]
+#[\EtruscanNode('etruscan-usage')]
+#[\EtruscanLayer('command')]
+#[\EtruscanContext('usage')]
+#[\EtruscanContext('cli')]
 final class EtruscanUsageCommand extends Command
 {
     public function handle(
         UsageLogReader $usageLogReader,
         UsageReportBuilder $usageReportBuilder,
         UsagePageRenderer $usagePageRenderer,
+        VaultReader $vaultReader,
+        ContextFootprintCalculator $contextFootprintCalculator,
     ): int {
         $daysOption = $this->option('days');
         $windowDays = null;
@@ -63,8 +69,10 @@ final class EtruscanUsageCommand extends Command
             windowDays: $windowDays,
         );
 
+        $footprint = $contextFootprintCalculator($vaultReader($vaultPath, EtruscanConfig::markerKey()));
+
         if ($this->option('json')) {
-            $this->line((string) json_encode($this->toArray($report), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+            $this->line((string) json_encode($this->toArray($report, $footprint), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
 
             return self::SUCCESS;
         }
@@ -89,13 +97,14 @@ final class EtruscanUsageCommand extends Command
             return self::SUCCESS;
         }
 
-        return $this->render($report);
+        return $this->render($report, $footprint);
     }
 
-    private function render(UsageReport $usageReport): int
+    private function render(UsageReport $usageReport, ContextFootprint $contextFootprint): int
     {
         if ($usageReport->events === 0) {
             $this->info('No usage recorded yet — agents have not consulted the map through the MCP tools'.($usageReport->windowDays !== null ? sprintf(' in the last %d day(s)', $usageReport->windowDays) : '').'.');
+            $this->renderFootprint($contextFootprint);
 
             return self::SUCCESS;
         }
@@ -113,9 +122,11 @@ final class EtruscanUsageCommand extends Command
                 '  Context served: %s chars (~%s tokens, estimated at %d chars/token)',
                 number_format($usageReport->charsServed),
                 number_format(TokenEstimator::estimate($usageReport->charsServed)),
-                TokenEstimator::CHARS_PER_TOKEN,
+                EtruscanConfig::charsPerToken(),
             ));
         }
+
+        $this->renderFootprint($contextFootprint);
 
         if ($usageReport->topNodes !== []) {
             $this->newLine();
@@ -148,7 +159,61 @@ final class EtruscanUsageCommand extends Command
     /**
      * @return array<string, mixed>
      */
-    private function toArray(UsageReport $usageReport): array
+    /**
+     * What the map costs against how much code it indexes. The log can only
+     * ever measure the first half; the size of the code the map covers is the
+     * comparison the package's whole claim rests on, and it was never made.
+     */
+    private function renderFootprint(ContextFootprint $contextFootprint): void
+    {
+        if ($contextFootprint->notes === 0) {
+            return;
+        }
+
+        $this->line(sprintf(
+            '  Map footprint: %d note(s), %s chars, indexing %s chars of source (%s:1)',
+            $contextFootprint->notes,
+            number_format($contextFootprint->noteChars),
+            number_format($contextFootprint->sourceChars),
+            number_format($contextFootprint->ratio(), 1),
+        ));
+
+        if ($contextFootprint->sourcesMissing > 0) {
+            $this->line(sprintf(
+                '  %d note(s) point at a source file that could not be read — regenerate to refresh the map',
+                $contextFootprint->sourcesMissing,
+            ));
+        }
+
+        $surfaceChars = $this->toolSurfaceChars();
+
+        $this->line(sprintf(
+            '  Always-on tool surface: %s chars (~%s tokens) in context on every request',
+            number_format($surfaceChars),
+            number_format(TokenEstimator::estimate($surfaceChars)),
+        ));
+    }
+
+    /**
+     * The descriptions and parameter text the four tools advertise. Unlike a
+     * served response this is paid on every request, so it belongs next to the
+     * served figure rather than going uncounted.
+     */
+    private function toolSurfaceChars(): int
+    {
+        $chars = 0;
+
+        foreach ([MapOverview::class, SearchMap::class, LookupNode::class, TraceNode::class] as $tool) {
+            $chars += mb_strlen((string) json_encode(app($tool)->toArray()));
+        }
+
+        return $chars;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function toArray(UsageReport $usageReport, ContextFootprint $contextFootprint): array
     {
         return [
             'window_days' => $usageReport->windowDays,
@@ -163,6 +228,14 @@ final class EtruscanUsageCommand extends Command
             'chars_served' => $usageReport->charsServed,
             'estimated_tokens_served' => TokenEstimator::estimate($usageReport->charsServed),
             'distinct_nodes_consulted' => $usageReport->distinctNodesConsulted,
+            'footprint' => [
+                'notes' => $contextFootprint->notes,
+                'note_chars' => $contextFootprint->noteChars,
+                'source_chars' => $contextFootprint->sourceChars,
+                'sources_missing' => $contextFootprint->sourcesMissing,
+                'source_to_note_ratio' => $contextFootprint->ratio(),
+                'tool_surface_chars' => $this->toolSurfaceChars(),
+            ],
             'skipped' => [
                 'malformed' => $usageReport->malformedLines,
                 'newer_schema' => $usageReport->newerSchemaLines,

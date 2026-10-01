@@ -14,10 +14,6 @@ Counts the distinct vault folders a set of notes would land in — feeds the dry
 
 ## References
 
-- [[etruscan-context]]
-- [[etruscan-layer]]
-- [[etruscan-node]]
-- [[note-content]]
 - [[note-path-resolver]]
 
 ## Referenced by

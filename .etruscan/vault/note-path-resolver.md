@@ -17,9 +17,6 @@ loud.
 
 ## References
 
-- [[etruscan-context]]
-- [[etruscan-layer]]
-- [[etruscan-node]]
 - [[invalid-grouping-value]]
 - [[note-content]]
 

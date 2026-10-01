@@ -15,9 +15,6 @@ folder, next to the reports built from it.
 
 ## References
 
-- [[etruscan-context]]
-- [[etruscan-layer]]
-- [[etruscan-node]]
 - [[reports-path-resolver]]
 
 ## Referenced by

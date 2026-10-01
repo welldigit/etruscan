@@ -18,14 +18,13 @@ the sentence an agent gets when there is no map yet — its only instruction abo
 ## References
 
 - [[etruscan-config]]
-- [[etruscan-context]]
-- [[etruscan-layer]]
-- [[etruscan-node]]
-- [[parsed-note]]
+- [[reference-index]]
+- [[source-freshness]]
 - [[vault-reader]]
 
 ## Referenced by
 
+- [[etruscan-export]]
 - [[lookup-node]]
 - [[map-overview]]
 - [[search-map]]

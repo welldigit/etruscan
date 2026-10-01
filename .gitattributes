@@ -3,6 +3,8 @@
 # from `composer require` downloads.
 
 /.etruscan          export-ignore
+/plugin             export-ignore
+/.claude-plugin     export-ignore
 /tests              export-ignore
 /.github            export-ignore
 /.gitattributes     export-ignore

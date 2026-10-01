@@ -8,9 +8,6 @@ use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
-use WellDigit\Etruscan\Attributes\EtruscanNode;
-use WellDigit\Etruscan\Attributes\Vocabulary\EtruscanContext;
-use WellDigit\Etruscan\Attributes\Vocabulary\EtruscanLayer;
 use WellDigit\Etruscan\Exceptions\AliasCollisionException;
 use WellDigit\Etruscan\Exceptions\ReservedAxisKeyException;
 use WellDigit\Etruscan\Services\CodebaseScanner;
@@ -25,9 +22,9 @@ use WellDigit\Etruscan\Utilities\ReportsPathResolver;
 #[Description('Render the node graph as a self-contained HTML page')]
 #[Signature('etruscan:graph
         {--output= : Override the output path (default: .reports/graph.html inside the vault)}')]
-#[EtruscanNode('etruscan-graph')]
-#[EtruscanLayer('command')]
-#[EtruscanContext('cli')]
+#[\EtruscanNode('etruscan-graph')]
+#[\EtruscanLayer('command')]
+#[\EtruscanContext('cli')]
 final class EtruscanGraphCommand extends Command
 {
     public function handle(

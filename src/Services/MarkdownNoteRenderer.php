@@ -4,16 +4,13 @@ declare(strict_types=1);
 
 namespace WellDigit\Etruscan\Services;
 
-use WellDigit\Etruscan\Attributes\EtruscanNode;
-use WellDigit\Etruscan\Attributes\Vocabulary\EtruscanContext;
-use WellDigit\Etruscan\Attributes\Vocabulary\EtruscanLayer;
 use WellDigit\Etruscan\Enums\NoteSection;
 use WellDigit\Etruscan\Payloads\NoteContent;
 use WellDigit\Etruscan\Utilities\BlankLineTrimmer;
 
-#[EtruscanNode('markdown-note-renderer')]
-#[EtruscanLayer('service')]
-#[EtruscanContext('projection')]
+#[\EtruscanNode('markdown-note-renderer')]
+#[\EtruscanLayer('service')]
+#[\EtruscanContext('projection')]
 final readonly class MarkdownNoteRenderer
 {
     private const int DESCRIPTION_WIDTH = 100;

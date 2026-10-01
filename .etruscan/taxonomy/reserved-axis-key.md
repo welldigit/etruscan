@@ -14,12 +14,6 @@ generated_by: etruscan
 Thrown when a custom axis derives a frontmatter key that collides with an identity key. A colliding
 axis would silently overwrite identity metadata, so the projection fails loud instead.
 
-## References
-
-- [[etruscan-context]]
-- [[etruscan-layer]]
-- [[etruscan-node]]
-
 ## Referenced by
 
 - [[etruscan-generate]]

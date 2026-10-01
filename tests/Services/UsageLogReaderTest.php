@@ -63,3 +63,13 @@ test('lines from a newer schema are counted separately, not as malformed', funct
         ->and($log['newerSchema'])->toBe(1)
         ->and($log['malformed'])->toBe(0);
 });
+
+test('the rotated generation is read first, so a rotation does not empty the report', function () {
+    File::put($this->logPath.'.1', '{"v":1,"recorded_at":"2026-07-27T10:00:00+00:00","type":"lookup","outcome":"hit","subject":"older","results":1}'."\n");
+    File::put($this->logPath, '{"v":1,"recorded_at":"2026-07-27T11:00:00+00:00","type":"lookup","outcome":"hit","subject":"newer","results":1}'."\n");
+
+    $log = app(UsageLogReader::class)($this->logPath);
+
+    expect(array_map(fn ($event) => $event->subject, $log['events']))->toBe(['older', 'newer'])
+        ->and($log['malformed'])->toBe(0);
+});

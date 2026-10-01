@@ -19,14 +19,13 @@ suggests the closest aliases.
 
 - [[consultation-recorder]]
 - [[etruscan-config]]
-- [[etruscan-context]]
-- [[etruscan-layer]]
-- [[etruscan-node]]
 - [[identity-frontmatter-key]]
 - [[map-reader]]
 - [[node-lookup]]
 - [[note-trust-reminder]]
 - [[parsed-note]]
+- [[text-clipper]]
+- [[truncation-notice]]
 - [[usage-event-type]]
 - [[usage-outcome]]
 
@@ -34,3 +33,4 @@ suggests the closest aliases.
 
 - [[etruscan-mcp-server]]
 - [[etruscan-service-provider]]
+- [[etruscan-usage]]

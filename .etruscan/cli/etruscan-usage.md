@@ -20,18 +20,22 @@ pre-validated annotation candidates, and the context served (chars plus an estim
 ## References
 
 - [[absolute-path-resolver]]
+- [[context-footprint]]
+- [[context-footprint-calculator]]
 - [[etruscan-config]]
-- [[etruscan-context]]
-- [[etruscan-layer]]
-- [[etruscan-node]]
+- [[lookup-node]]
+- [[map-overview]]
 - [[reports-directory-preparer]]
 - [[reports-path-resolver]]
+- [[search-map]]
 - [[token-estimator]]
+- [[trace-node]]
 - [[usage-log-path-resolver]]
 - [[usage-log-reader]]
 - [[usage-page-renderer]]
 - [[usage-report]]
 - [[usage-report-builder]]
+- [[vault-reader]]
 
 ## Referenced by
 

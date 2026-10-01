@@ -16,9 +16,6 @@ touches the clock.
 
 ## References
 
-- [[etruscan-context]]
-- [[etruscan-layer]]
-- [[etruscan-node]]
 - [[usage-event]]
 - [[usage-event-type]]
 - [[usage-outcome]]

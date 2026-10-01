@@ -4,13 +4,9 @@ declare(strict_types=1);
 
 namespace WellDigit\Etruscan\Payloads;
 
-use WellDigit\Etruscan\Attributes\EtruscanNode;
-use WellDigit\Etruscan\Attributes\Vocabulary\EtruscanContext;
-use WellDigit\Etruscan\Attributes\Vocabulary\EtruscanLayer;
-
-#[EtruscanNode('note-content')]
-#[EtruscanLayer('payload')]
-#[EtruscanContext('projection')]
+#[\EtruscanNode('note-content')]
+#[\EtruscanLayer('payload')]
+#[\EtruscanContext('projection')]
 final readonly class NoteContent
 {
     /**

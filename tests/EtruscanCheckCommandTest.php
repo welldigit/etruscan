@@ -131,3 +131,22 @@ test('warnings alone pass, but fail under --strict', function () {
     $this->artisan('etruscan:check')->assertSuccessful();
     $this->artisan('etruscan:check', ['--strict' => true])->assertFailed();
 });
+
+test('an attribute written without its leading backslash is reported, and fails a strict run', function () {
+    File::put($this->fixtureDirectory.'/Forgotten.php', <<<'PHP'
+        <?php
+
+        namespace Fixture\Check;
+
+        #[EtruscanNode('forgotten')]
+        #[EtruscanLayer('action')]
+        final class Forgotten {}
+        PHP);
+
+    $this->artisan('etruscan:check')
+        ->expectsOutputToContain('#[EtruscanNode] on Fixture\Check\Forgotten')
+        ->assertSuccessful();
+
+    $this->artisan('etruscan:check', ['--strict' => true])
+        ->assertFailed();
+});

@@ -16,15 +16,14 @@ Registers the etruscan config file and both artisan commands via spatie/laravel-
 ## References
 
 - [[etruscan-check]]
-- [[etruscan-context]]
+- [[etruscan-export]]
 - [[etruscan-generate]]
 - [[etruscan-graph]]
-- [[etruscan-layer]]
 - [[etruscan-mcp]]
 - [[etruscan-mcp-server]]
-- [[etruscan-node]]
 - [[etruscan-usage]]
 - [[lookup-node]]
 - [[map-overview]]
+- [[reference-index]]
 - [[search-map]]
 - [[trace-node]]

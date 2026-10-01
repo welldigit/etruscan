@@ -14,12 +14,6 @@ generated_by: etruscan
 Thrown when a grouping axis value cannot be sanitized into a directory name — that is an
 annotation bug, so the projection fails loud rather than dumping the note somewhere surprising.
 
-## References
-
-- [[etruscan-context]]
-- [[etruscan-layer]]
-- [[etruscan-node]]
-
 ## Referenced by
 
 - [[etruscan-generate]]

@@ -116,3 +116,72 @@ test('an invalid days option fails loud', function () {
     $this->artisan('etruscan:usage', ['--days' => 'abc'])->assertFailed();
     $this->artisan('etruscan:usage', ['--days' => 0])->assertFailed();
 });
+
+// The log measures what the map delivered. The footprint measures how much code
+// that map covers — the comparison the map's claim rests on.
+test('the report weighs the map against the source it indexes', function () {
+    $sourceDirectory = base_path('etruscan-usagecmd-src');
+    File::ensureDirectoryExists($sourceDirectory);
+    File::put($sourceDirectory.'/Monitor.php', str_repeat('s', 2000));
+
+    File::put($this->vaultPath.'/monitor.md', implode("\n", [
+        '---',
+        'alias: monitor',
+        'source: etruscan-usagecmd-src/Monitor.php',
+        'generated_by: etruscan',
+        '---',
+        '',
+        '## Description',
+        '',
+        'The uptime monitor aggregate.',
+    ])."\n");
+
+    seedUsageLog($this->vaultPath, [
+        '{"v":1,"recorded_at":"2026-07-27T10:00:00+00:00","type":"lookup","outcome":"hit","subject":"monitor","results":1,"chars":600}',
+    ]);
+
+    Artisan::call('etruscan:usage');
+    $output = Artisan::output();
+
+    File::deleteDirectory($sourceDirectory);
+
+    expect($output)->toContain('Map footprint: 1 note(s)')
+        ->and($output)->toContain('indexing 2,000 chars of source')
+        ->and($output)->toContain('Always-on tool surface:');
+});
+
+test('a note pointing at a source file that has gone says so', function () {
+    File::put($this->vaultPath.'/gone.md', implode("\n", [
+        '---',
+        'alias: gone',
+        'source: nowhere/Gone.php',
+        'generated_by: etruscan',
+        '---',
+        '',
+        '## Description',
+        '',
+        'Points at nothing.',
+    ])."\n");
+
+    $this->artisan('etruscan:usage')
+        ->expectsOutputToContain('1 note(s) point at a source file that could not be read')
+        ->assertSuccessful();
+});
+
+test('the json contract carries the footprint', function () {
+    File::put($this->vaultPath.'/monitor.md', "---\nalias: monitor\ngenerated_by: etruscan\n---\n");
+
+    seedUsageLog($this->vaultPath, [
+        '{"v":1,"recorded_at":"2026-07-27T10:00:00+00:00","type":"lookup","outcome":"hit","subject":"monitor","results":1,"chars":600}',
+    ]);
+
+    Artisan::call('etruscan:usage', ['--json' => true]);
+    $report = decodeJson(Artisan::output());
+
+    $footprint = $report['footprint'];
+    $footprint = is_array($footprint) ? $footprint : [];
+
+    expect($footprint)->toHaveKeys([
+        'notes', 'note_chars', 'source_chars', 'sources_missing', 'source_to_note_ratio', 'tool_surface_chars',
+    ])->and($footprint['notes'] ?? null)->toBe(1);
+});

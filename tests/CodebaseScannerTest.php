@@ -47,7 +47,7 @@ test('it scans a class with a node attribute, axes and references', function () 
             'domain' => ['monitor'],
             'context' => ['checking'],
         ])
-        ->and($class->references)->toContain('Fixture\Inventory\Helper')
+        ->and($class->references)->not->toContain('Fixture\Inventory\Helper')
         ->and($class->sourcePath)->toEndWith('Alpha.php')
         ->and($class->extendsFqcn)->toBeNull();
 });
@@ -177,4 +177,91 @@ test('non-string attribute arguments are ignored for axes', function () {
 
     expect($scanned[0]->alias)->toBe('fixture-constants')
         ->and($scanned[0]->axes)->toBe([]);
+});
+
+test('the global attribute twins are recognised with no import at all', function () {
+    File::put($this->fixtureDirectory.'/GlobalTwin.php', <<<'PHP'
+        <?php
+
+        namespace Fixture\Inventory;
+
+        #[\EtruscanNode('fixture-global')]
+        #[\EtruscanLayer('action')]
+        #[\EtruscanContext('booking')]
+        #[\EtruscanContext('booking')]
+        #[\EtruscanDomain('monitor')]
+        #[\EtruscanSlice('checkout')]
+        final class GlobalTwin {}
+        PHP);
+
+    $scanned = app(CodebaseScanner::class)([$this->fixtureDirectory]);
+
+    expect($scanned[0]->alias)->toBe('fixture-global')
+        ->and($scanned[0]->axes)->toBe([
+            'layer' => ['action'],
+            'context' => ['booking'],
+            'domain' => ['monitor'],
+            'slice' => ['checkout'],
+        ]);
+});
+
+test('a global twin brought in by an import is recognised too', function () {
+    // What Rector's importNames() leaves behind when importShortClasses is on.
+    File::put($this->fixtureDirectory.'/Imported.php', <<<'PHP'
+        <?php
+
+        namespace Fixture\Inventory;
+
+        use EtruscanLayer;
+        use EtruscanNode;
+
+        #[EtruscanNode('fixture-imported')]
+        #[EtruscanLayer('service')]
+        final class Imported {}
+        PHP);
+
+    $scanned = app(CodebaseScanner::class)([$this->fixtureDirectory]);
+
+    expect($scanned[0]->alias)->toBe('fixture-imported')
+        ->and($scanned[0]->axes)->toBe(['layer' => ['service']]);
+});
+
+test('global and namespaced attributes mix on one class and their values are deduplicated', function () {
+    File::put($this->fixtureDirectory.'/BothSpellings.php', <<<'PHP'
+        <?php
+
+        namespace Fixture\Inventory;
+
+        use WellDigit\Etruscan\Attributes\Vocabulary\EtruscanContext;
+
+        #[\EtruscanNode('fixture-both')]
+        #[EtruscanContext('billing')]
+        #[\EtruscanContext('billing')]
+        #[\EtruscanContext('monitor')]
+        final class BothSpellings {}
+        PHP);
+
+    $scanned = app(CodebaseScanner::class)([$this->fixtureDirectory]);
+
+    expect($scanned[0]->alias)->toBe('fixture-both')
+        ->and($scanned[0]->axes)->toBe(['context' => ['billing', 'monitor']]);
+});
+
+test('an attribute missing its leading backslash resolves into the class own namespace and leaves it off the map', function () {
+    File::put($this->fixtureDirectory.'/Forgotten.php', <<<'PHP'
+        <?php
+
+        namespace Fixture\Inventory;
+
+        #[EtruscanNode('fixture-forgotten')]
+        #[EtruscanLayer('action')]
+        final class Forgotten {}
+        PHP);
+
+    $scanned = app(CodebaseScanner::class)([$this->fixtureDirectory]);
+
+    expect($scanned[0]->isNode())->toBeFalse()
+        ->and($scanned[0]->axes)->toBe([])
+        ->and(array_map(static fn ($evidence): string => $evidence->target, $scanned[0]->evidence))
+        ->toContain('Fixture\Inventory\EtruscanNode');
 });

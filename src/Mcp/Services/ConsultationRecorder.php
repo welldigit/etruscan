@@ -4,9 +4,6 @@ declare(strict_types=1);
 
 namespace WellDigit\Etruscan\Mcp\Services;
 
-use WellDigit\Etruscan\Attributes\EtruscanNode;
-use WellDigit\Etruscan\Attributes\Vocabulary\EtruscanContext;
-use WellDigit\Etruscan\Attributes\Vocabulary\EtruscanLayer;
 use WellDigit\Etruscan\Enums\UsageEventType;
 use WellDigit\Etruscan\Enums\UsageOutcome;
 use WellDigit\Etruscan\Payloads\UsageEvent;
@@ -20,10 +17,10 @@ use WellDigit\Etruscan\Utilities\UsageLogPathResolver;
  * text they are about to serve rather than a count, so the recorded size is by
  * construction the text that actually left the tool.
  */
-#[EtruscanNode('consultation-recorder')]
-#[EtruscanLayer('service')]
-#[EtruscanContext('mcp')]
-#[EtruscanContext('usage')]
+#[\EtruscanNode('consultation-recorder')]
+#[\EtruscanLayer('service')]
+#[\EtruscanContext('mcp')]
+#[\EtruscanContext('usage')]
 final readonly class ConsultationRecorder
 {
     public function __construct(

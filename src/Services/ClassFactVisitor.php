@@ -6,24 +6,35 @@ namespace WellDigit\Etruscan\Services;
 
 use PhpParser\Node;
 use PhpParser\Node\Attribute;
+use PhpParser\Node\Expr\ClassConstFetch;
+use PhpParser\Node\Expr\Instanceof_;
+use PhpParser\Node\Expr\New_;
+use PhpParser\Node\Expr\StaticCall;
+use PhpParser\Node\Expr\StaticPropertyFetch;
+use PhpParser\Node\FunctionLike;
+use PhpParser\Node\IntersectionType;
 use PhpParser\Node\Name;
+use PhpParser\Node\NullableType;
+use PhpParser\Node\Param;
 use PhpParser\Node\Scalar\String_;
+use PhpParser\Node\Stmt\Catch_;
 use PhpParser\Node\Stmt\Class_;
+use PhpParser\Node\Stmt\ClassConst;
 use PhpParser\Node\Stmt\ClassLike;
-use PhpParser\Node\Stmt\GroupUse;
-use PhpParser\Node\Stmt\Use_;
-use PhpParser\NodeVisitor;
+use PhpParser\Node\Stmt\Interface_;
+use PhpParser\Node\Stmt\Property;
+use PhpParser\Node\Stmt\TraitUse;
+use PhpParser\Node\Stmt\TraitUseAdaptation;
+use PhpParser\Node\UnionType;
 use PhpParser\NodeVisitorAbstract;
-use WellDigit\Etruscan\Attributes\EtruscanNode;
-use WellDigit\Etruscan\Attributes\Vocabulary\EtruscanContext;
-use WellDigit\Etruscan\Attributes\Vocabulary\EtruscanLayer;
+use WellDigit\Etruscan\Payloads\ReferenceEvidence;
 
 /**
- * @phpstan-type ClassFact array{fqcn: string, extends: string|null, attributes: list<array{fqcn: string, args: list<string>}>}
+ * @phpstan-type ClassFact array{fqcn: string, extends: string|null, attributes: list<array{fqcn: string, args: list<string>}>, evidence: list<ReferenceEvidence>}
  */
-#[EtruscanNode('class-fact-visitor')]
-#[EtruscanLayer('visitor')]
-#[EtruscanContext('scan')]
+#[\EtruscanNode('class-fact-visitor')]
+#[\EtruscanLayer('visitor')]
+#[\EtruscanContext('scan')]
 final class ClassFactVisitor extends NodeVisitorAbstract
 {
     /**
@@ -36,50 +47,75 @@ final class ClassFactVisitor extends NodeVisitorAbstract
      */
     public array $classes = [];
 
+    /** @var list<int|null> Named class index, or null inside an anonymous class. */
+    private array $classStack = [];
+
     public function enterNode(Node $node): ?int
     {
-        if ($node instanceof Use_) {
-            $this->collectUses(groupType: $node->type, prefix: null, uses: $node->uses);
-
-            return NodeVisitor::DONT_TRAVERSE_CHILDREN;
-        }
-
-        if ($node instanceof GroupUse) {
-            $this->collectUses(groupType: $node->type, prefix: $node->prefix->toString(), uses: $node->uses);
-
-            return NodeVisitor::DONT_TRAVERSE_CHILDREN;
-        }
-
-        if ($node instanceof Name) {
-            if (! $node->isSpecialClassName()) {
-                $this->references[] = $this->resolveName($node);
-            }
-
-            return null;
-        }
-
         if ($node instanceof ClassLike) {
+            $this->classStack[] = $node->name === null ? null : count($this->classes);
             $this->collectClass($node);
+        }
+
+        $index = $this->classStack === [] ? null : $this->classStack[array_key_last($this->classStack)];
+
+        if ($node instanceof Name && $index !== null) {
+            $kind = $this->referenceKind($node);
+
+            if ($kind !== null) {
+                $target = $this->resolveName($node);
+
+                if ($node->isSpecialClassName()) {
+                    $target = strtolower($target) === 'parent'
+                        ? ($this->classes[$index]['extends'] ?? '')
+                        : $this->classes[$index]['fqcn'];
+                }
+
+                if ($target !== '') {
+                    $this->references[] = $target;
+                    $this->classes[$index]['evidence'][] = new ReferenceEvidence($target, $kind, $node->getStartLine());
+                }
+            }
         }
 
         return null;
     }
 
-    /**
-     * @param  array<int, Node\UseItem>  $uses
-     */
-    private function collectUses(int $groupType, ?string $prefix, array $uses): void
+    public function leaveNode(Node $node): ?int
     {
-        foreach ($uses as $use) {
-            $type = $use->type !== Use_::TYPE_UNKNOWN ? $use->type : $groupType;
-
-            if ($type !== Use_::TYPE_NORMAL && $type !== Use_::TYPE_UNKNOWN) {
-                continue;
-            }
-
-            $name = $use->name->toString();
-            $this->references[] = $prefix === null ? $name : $prefix.'\\'.$name;
+        if ($node instanceof ClassLike) {
+            array_pop($this->classStack);
         }
+
+        return null;
+    }
+
+    private function referenceKind(Name $name): ?string
+    {
+        $parent = $name->getAttribute('parent');
+
+        return match (true) {
+            $parent instanceof Attribute => 'attribute',
+            $parent instanceof Class_ && $parent->extends === $name => 'extends',
+            $parent instanceof Interface_ => 'extends',
+            $parent instanceof ClassLike => 'implements',
+            $parent instanceof TraitUse,
+            $parent instanceof TraitUseAdaptation => 'trait',
+            $parent instanceof New_ && $parent->class === $name => 'new',
+            $parent instanceof StaticCall && $parent->class === $name => 'static-call',
+            $parent instanceof StaticPropertyFetch && $parent->class === $name => 'static-property',
+            $parent instanceof ClassConstFetch && $parent->class === $name => 'class-constant',
+            $parent instanceof Instanceof_ && $parent->class === $name => 'instanceof',
+            $parent instanceof Param,
+            $parent instanceof Property,
+            $parent instanceof ClassConst,
+            $parent instanceof FunctionLike,
+            $parent instanceof NullableType,
+            $parent instanceof UnionType,
+            $parent instanceof IntersectionType,
+            $parent instanceof Catch_ => 'type',
+            default => null,
+        };
     }
 
     private function collectClass(ClassLike $node): void
@@ -107,6 +143,7 @@ final class ClassFactVisitor extends NodeVisitorAbstract
                 ? $this->resolveName($node->extends)
                 : null,
             'attributes' => $attributes,
+            'evidence' => [],
         ];
     }
 

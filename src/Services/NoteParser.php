@@ -4,22 +4,19 @@ declare(strict_types=1);
 
 namespace WellDigit\Etruscan\Services;
 
-use WellDigit\Etruscan\Attributes\EtruscanNode;
-use WellDigit\Etruscan\Attributes\Vocabulary\EtruscanContext;
-use WellDigit\Etruscan\Attributes\Vocabulary\EtruscanLayer;
 use WellDigit\Etruscan\Enums\IdentityFrontmatterKey;
 use WellDigit\Etruscan\Enums\NoteSection;
 use WellDigit\Etruscan\Payloads\ParsedNote;
 use WellDigit\Etruscan\Utilities\BlankLineTrimmer;
 
-#[EtruscanNode('note-parser')]
-#[EtruscanLayer('service')]
-#[EtruscanContext('vault')]
+#[\EtruscanNode('note-parser')]
+#[\EtruscanLayer('service')]
+#[\EtruscanContext('vault')]
 final readonly class NoteParser
 {
     private const string LEGACY_MANUAL_DELIMITER = '%% Manual notes below this line are preserved across regenerations %%';
 
-    public function __invoke(string $content): ParsedNote
+    public function __invoke(string $content, ?string $path = null): ParsedNote
     {
         $frontmatter = $this->parseFrontmatter($content);
         $sections = $this->parseBody($this->stripFrontmatter($content));
@@ -33,6 +30,7 @@ final readonly class NoteParser
             manual: $sections['manual'],
             links: $sections['links'],
             referencedBy: $sections['referencedBy'],
+            path: $path,
         );
     }
 

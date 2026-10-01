@@ -15,10 +15,6 @@ one-line descriptions, honouring the requested [[trace-direction]].
 
 ## References
 
-- [[etruscan-context]]
-- [[etruscan-layer]]
-- [[etruscan-node]]
-- [[parsed-note]]
 - [[trace-direction]]
 
 ## Referenced by

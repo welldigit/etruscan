@@ -15,12 +15,6 @@ generated_by: etruscan
 
 Starts the Etruscan MCP server over stdio — the command an agent's .mcp.json points at.
 
-## References
-
-- [[etruscan-context]]
-- [[etruscan-layer]]
-- [[etruscan-node]]
-
 ## Referenced by
 
 - [[etruscan-service-provider]]

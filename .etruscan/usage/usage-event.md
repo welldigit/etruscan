@@ -16,9 +16,6 @@ The atom the usefulness report is built from.
 
 ## References
 
-- [[etruscan-context]]
-- [[etruscan-layer]]
-- [[etruscan-node]]
 - [[usage-event-type]]
 - [[usage-outcome]]
 

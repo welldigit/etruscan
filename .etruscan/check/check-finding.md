@@ -17,13 +17,13 @@ message. The command groups these for output and derives its exit code from them
 
 - [[check-category]]
 - [[check-severity]]
-- [[etruscan-context]]
-- [[etruscan-layer]]
-- [[etruscan-node]]
 
 ## Referenced by
 
 - [[broken-link-checker]]
+- [[digest-staleness-checker]]
 - [[duplicate-alias-checker]]
 - [[etruscan-check]]
+- [[structural-map-checker]]
+- [[unresolved-attribute-checker]]
 - [[vocabulary-checker]]

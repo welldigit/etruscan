@@ -13,15 +13,7 @@ generated_by: etruscan
 Immutable facts of one scanned class, node or not — the alias is null when the class carries no
 #[EtruscanNode].
 
-## References
-
-- [[etruscan-context]]
-- [[etruscan-layer]]
-- [[etruscan-node]]
-
 ## Referenced by
 
 - [[codebase-scanner]]
-- [[duplicate-alias-checker]]
 - [[node-graph-builder]]
-- [[vocabulary-checker]]

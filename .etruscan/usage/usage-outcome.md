@@ -13,12 +13,6 @@ generated_by: etruscan
 Whether the map could answer: hit, or miss — and misses are the point, because each one names
 something worth annotating.
 
-## References
-
-- [[etruscan-context]]
-- [[etruscan-layer]]
-- [[etruscan-node]]
-
 ## Referenced by
 
 - [[consultation-recorder]]

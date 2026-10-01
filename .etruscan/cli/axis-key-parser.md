@@ -13,12 +13,6 @@ generated_by: etruscan
 Parses raw comma-separated axis keys into a clean list: trimmed, empties dropped, duplicates
 collapsed, order preserved — order defines the folder nesting.
 
-## References
-
-- [[etruscan-context]]
-- [[etruscan-layer]]
-- [[etruscan-node]]
-
 ## Referenced by
 
 - [[etruscan-generate]]

@@ -14,12 +14,6 @@ generated_by: etruscan
 Thrown when two classes claim the same node alias. A vault cannot hold two notes with one filename,
 so the projection fails loud rather than clobbering.
 
-## References
-
-- [[etruscan-context]]
-- [[etruscan-layer]]
-- [[etruscan-node]]
-
 ## Referenced by
 
 - [[etruscan-generate]]

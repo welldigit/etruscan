@@ -5,17 +5,14 @@ declare(strict_types=1);
 namespace WellDigit\Etruscan\Services;
 
 use Illuminate\Support\Facades\File;
-use WellDigit\Etruscan\Attributes\EtruscanNode;
-use WellDigit\Etruscan\Attributes\Vocabulary\EtruscanContext;
-use WellDigit\Etruscan\Attributes\Vocabulary\EtruscanLayer;
 use WellDigit\Etruscan\Enums\CheckCategory;
 use WellDigit\Etruscan\Enums\CheckSeverity;
 use WellDigit\Etruscan\Payloads\CheckFinding;
 use WellDigit\Etruscan\Payloads\NoteContent;
 
-#[EtruscanNode('broken-link-checker')]
-#[EtruscanLayer('service')]
-#[EtruscanContext('check')]
+#[\EtruscanNode('broken-link-checker')]
+#[\EtruscanLayer('service')]
+#[\EtruscanContext('check')]
 final readonly class BrokenLinkChecker
 {
     /**

@@ -16,6 +16,3 @@ Bundled axis: the vertical feature slice the class helps deliver, across layers 
 ## References
 
 - [[etruscan-axis]]
-- [[etruscan-context]]
-- [[etruscan-layer]]
-- [[etruscan-node]]

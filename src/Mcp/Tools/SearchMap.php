@@ -9,25 +9,21 @@ use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
 use Laravel\Mcp\Server\Tool;
 use Laravel\Mcp\Server\Tools\Annotations\IsReadOnly;
-use WellDigit\Etruscan\Attributes\EtruscanNode;
-use WellDigit\Etruscan\Attributes\Vocabulary\EtruscanContext;
-use WellDigit\Etruscan\Attributes\Vocabulary\EtruscanLayer;
-use WellDigit\Etruscan\Enums\IdentityFrontmatterKey;
 use WellDigit\Etruscan\Enums\UsageEventType;
 use WellDigit\Etruscan\Enums\UsageOutcome;
 use WellDigit\Etruscan\Mcp\Services\ConsultationRecorder;
 use WellDigit\Etruscan\Mcp\Services\MapReader;
 use WellDigit\Etruscan\Mcp\Services\MapSearch;
-use WellDigit\Etruscan\Payloads\ParsedNote;
 use WellDigit\Etruscan\Utilities\EtruscanConfig;
+use WellDigit\Etruscan\Utilities\NodeSummaryLine;
 
 #[IsReadOnly]
-#[EtruscanNode('search-map')]
-#[EtruscanLayer('tool')]
-#[EtruscanContext('mcp')]
+#[\EtruscanNode('search-map')]
+#[\EtruscanLayer('tool')]
+#[\EtruscanContext('mcp')]
 final class SearchMap extends Tool
 {
-    protected string $description = 'Search the codebase map by name or concept — matches node aliases, class names, taxonomy values and descriptions. Returns ranked nodes; follow up with lookup-node.';
+    protected string $description = 'Ranked substring search over the codebase map. Scores every node on its alias (exact, then partial), class short name and FQCN, taxonomy values, description and human notes, then returns the '.MapSearch::RESULT_LIMIT.' highest-scoring nodes, one line each: alias, source path, and the description clipped to '.NodeSummaryLine::DESCRIPTION_LIMIT.' characters. Use it to turn a name or a concept into an alias you can pass to lookup-node or trace-node. It returns no taxonomy, no dependency links and no full description — lookup-node gives those, and map-overview gives the whole map rather than the top matches. Queries are recorded locally, misses included, so a search that finds nothing is useful signal rather than a wasted call.';
 
     public function __construct(
         private readonly MapReader $mapReader,
@@ -42,7 +38,7 @@ final class SearchMap extends Tool
     public function schema(JsonSchema $schema): array
     {
         return [
-            'query' => $schema->string()->description('A class name, alias fragment or concept, e.g. "booking guard".')->required(),
+            'query' => $schema->string()->description('One search string, matched as a single case-insensitive substring — it is not tokenised, so a multi-word phrase matches only text containing that exact phrase. Prefer one distinctive term ("booking", "guard", "MonitorCreate") and search again with a different term rather than combining words.')->required(),
         ];
     }
 
@@ -63,8 +59,10 @@ final class SearchMap extends Tool
         $matches = ($this->mapSearch)($notesByAlias, $query);
 
         $text = $matches === []
-            ? 'No nodes match ['.$query.']. The concept may be missing from the map — consider annotating the class that owns it.'
-            : implode("\n", array_map($this->line(...), $matches));
+            ? 'No nodes match ['.$query.']. Try another term or source search; a miss can mean different terminology, stale data, or missing annotations.'
+            : implode("\n", array_map(NodeSummaryLine::render(...), $matches));
+
+        $text .= "\n\n".$this->mapReader->freshnessNotice();
 
         ($this->consultationRecorder)(
             vaultPath: EtruscanConfig::vaultPath(),
@@ -76,23 +74,5 @@ final class SearchMap extends Tool
         );
 
         return Response::text($text);
-    }
-
-    private function line(ParsedNote $parsedNote): string
-    {
-        $description = (string) preg_replace('/\s+/', ' ', $parsedNote->description);
-
-        if (strlen($description) > 140) {
-            $description = substr($description, 0, 137).'...';
-        }
-
-        $source = $parsedNote->frontmatter[IdentityFrontmatterKey::Source->value] ?? null;
-
-        return sprintf(
-            '- %s%s%s',
-            $parsedNote->alias,
-            is_string($source) ? ' ('.$source.')' : '',
-            $description === '' ? '' : ' — '.$description,
-        );
     }
 }

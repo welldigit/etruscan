@@ -19,9 +19,6 @@ self-links simply drop out.
 ## References
 
 - [[alias-collision]]
-- [[etruscan-context]]
-- [[etruscan-layer]]
-- [[etruscan-node]]
 - [[identity-frontmatter-key]]
 - [[note-content]]
 - [[reserved-axis-key]]

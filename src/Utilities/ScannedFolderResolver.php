@@ -4,13 +4,9 @@ declare(strict_types=1);
 
 namespace WellDigit\Etruscan\Utilities;
 
-use WellDigit\Etruscan\Attributes\EtruscanNode;
-use WellDigit\Etruscan\Attributes\Vocabulary\EtruscanContext;
-use WellDigit\Etruscan\Attributes\Vocabulary\EtruscanLayer;
-
-#[EtruscanNode('scanned-folder-resolver')]
-#[EtruscanLayer('utility')]
-#[EtruscanContext('scan')]
+#[\EtruscanNode('scanned-folder-resolver')]
+#[\EtruscanLayer('utility')]
+#[\EtruscanContext('scan')]
 final class ScannedFolderResolver
 {
     /**

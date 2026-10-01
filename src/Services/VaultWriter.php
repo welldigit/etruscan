@@ -6,14 +6,11 @@ namespace WellDigit\Etruscan\Services;
 
 use FilesystemIterator;
 use Illuminate\Support\Facades\File;
-use WellDigit\Etruscan\Attributes\EtruscanNode;
-use WellDigit\Etruscan\Attributes\Vocabulary\EtruscanContext;
-use WellDigit\Etruscan\Attributes\Vocabulary\EtruscanLayer;
 use WellDigit\Etruscan\Payloads\NoteContent;
 
-#[EtruscanNode('vault-writer')]
-#[EtruscanLayer('service')]
-#[EtruscanContext('vault')]
+#[\EtruscanNode('vault-writer')]
+#[\EtruscanLayer('service')]
+#[\EtruscanContext('vault')]
 final readonly class VaultWriter
 {
     public function __construct(
@@ -49,13 +46,17 @@ final readonly class VaultWriter
             $carried = $carriedByAlias[$noteContent->alias] ?? ['description' => '', 'manual' => ''];
 
             File::ensureDirectoryExists(dirname($absolutePath));
-            File::put($absolutePath, ($this->markdownNoteRenderer)(
+
+            // Written to a temp file and renamed, so a tool reading mid-generation
+            // never sees half a note. The mode is explicit: File::replace defaults
+            // to 0777 minus umask, which would mark every committed note executable.
+            File::replace($absolutePath, ($this->markdownNoteRenderer)(
                 noteContent: $noteContent,
                 markerKey: $markerKey,
                 markerValue: $markerValue,
                 manualContent: $carried['manual'],
                 carriedDescription: $carried['description'],
-            ));
+            ), 0666 & ~umask());
 
             $expectedPaths[$relativePath] = true;
             $expectedAliases[$noteContent->alias] = true;

@@ -18,10 +18,6 @@ that would otherwise fail generation loud, surfaced proactively as an error.
 - [[check-category]]
 - [[check-finding]]
 - [[check-severity]]
-- [[etruscan-context]]
-- [[etruscan-layer]]
-- [[etruscan-node]]
-- [[scanned-class]]
 
 ## Referenced by
 

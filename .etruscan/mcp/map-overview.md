@@ -18,11 +18,9 @@ default). The intended first tool in an unfamiliar codebase.
 
 - [[consultation-recorder]]
 - [[etruscan-config]]
-- [[etruscan-context]]
-- [[etruscan-layer]]
-- [[etruscan-node]]
 - [[map-overview-builder]]
 - [[map-reader]]
+- [[truncation-notice]]
 - [[usage-event-type]]
 - [[usage-outcome]]
 
@@ -30,3 +28,4 @@ default). The intended first tool in an unfamiliar codebase.
 
 - [[etruscan-mcp-server]]
 - [[etruscan-service-provider]]
+- [[etruscan-usage]]

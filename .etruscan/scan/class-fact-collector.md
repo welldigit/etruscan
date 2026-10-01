@@ -16,9 +16,6 @@ NameResolver, so the visitor's traversal state never leaks past a single invocat
 ## References
 
 - [[class-fact-visitor]]
-- [[etruscan-context]]
-- [[etruscan-layer]]
-- [[etruscan-node]]
 
 ## Referenced by
 

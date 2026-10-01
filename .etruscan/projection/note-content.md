@@ -14,19 +14,8 @@ A fully resolved node, ready to render as one markdown note: alias, frontmatter,
 lists. The optional description is only ever the note's own human text (read from the vault for
 graph rendering) — generation never derives one.
 
-## References
-
-- [[etruscan-context]]
-- [[etruscan-layer]]
-- [[etruscan-node]]
-
 ## Referenced by
 
-- [[broken-link-checker]]
-- [[etruscan-generate]]
-- [[graph-page-renderer]]
 - [[markdown-note-renderer]]
 - [[node-graph-builder]]
 - [[note-path-resolver]]
-- [[target-folder-counter]]
-- [[vault-writer]]

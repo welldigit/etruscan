@@ -15,9 +15,7 @@ value beats description text. Pure function of the parsed notes; no IO.
 
 ## References
 
-- [[etruscan-context]]
-- [[etruscan-layer]]
-- [[etruscan-node]]
+- [[etruscan-config]]
 - [[identity-frontmatter-key]]
 - [[parsed-note]]
 

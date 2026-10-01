@@ -4,13 +4,9 @@ declare(strict_types=1);
 
 namespace WellDigit\Etruscan\Enums;
 
-use WellDigit\Etruscan\Attributes\EtruscanNode;
-use WellDigit\Etruscan\Attributes\Vocabulary\EtruscanContext;
-use WellDigit\Etruscan\Attributes\Vocabulary\EtruscanLayer;
-
-#[EtruscanNode('identity-frontmatter-key')]
-#[EtruscanLayer('enum')]
-#[EtruscanContext('projection')]
+#[\EtruscanNode('identity-frontmatter-key')]
+#[\EtruscanLayer('enum')]
+#[\EtruscanContext('projection')]
 enum IdentityFrontmatterKey: string
 {
     case Alias = 'alias';

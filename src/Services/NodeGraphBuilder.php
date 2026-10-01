@@ -4,18 +4,15 @@ declare(strict_types=1);
 
 namespace WellDigit\Etruscan\Services;
 
-use WellDigit\Etruscan\Attributes\EtruscanNode;
-use WellDigit\Etruscan\Attributes\Vocabulary\EtruscanContext;
-use WellDigit\Etruscan\Attributes\Vocabulary\EtruscanLayer;
 use WellDigit\Etruscan\Enums\IdentityFrontmatterKey;
 use WellDigit\Etruscan\Exceptions\AliasCollisionException;
 use WellDigit\Etruscan\Exceptions\ReservedAxisKeyException;
 use WellDigit\Etruscan\Payloads\NoteContent;
 use WellDigit\Etruscan\Payloads\ScannedClass;
 
-#[EtruscanNode('node-graph-builder')]
-#[EtruscanLayer('service')]
-#[EtruscanContext('projection')]
+#[\EtruscanNode('node-graph-builder')]
+#[\EtruscanLayer('service')]
+#[\EtruscanContext('projection')]
 final readonly class NodeGraphBuilder
 {
     /**
@@ -106,7 +103,7 @@ final readonly class NodeGraphBuilder
                 );
             }
 
-            $aliasByFqcn[$scannedClass->fqcn] = $alias;
+            $aliasByFqcn[strtolower($scannedClass->fqcn)] = $alias;
             $fqcnByAlias[$alias] = $scannedClass->fqcn;
         }
 
@@ -174,9 +171,9 @@ final readonly class NodeGraphBuilder
         $aliases = [];
 
         foreach ($scannedClass->references as $reference) {
-            $reference = ltrim($reference, '\\');
+            $reference = strtolower(ltrim($reference, '\\'));
 
-            if ($reference === $scannedClass->fqcn) {
+            if ($reference === strtolower($scannedClass->fqcn)) {
                 continue;
             }
 

@@ -18,13 +18,15 @@ written is exactly what is read.
 
 ## References
 
-- [[etruscan-context]]
-- [[etruscan-layer]]
-- [[etruscan-node]]
 - [[note-parser]]
-- [[parsed-note]]
 
 ## Referenced by
 
+- [[digest-staleness-checker]]
+- [[etruscan-export]]
+- [[etruscan-generate]]
+- [[etruscan-usage]]
 - [[map-reader]]
+- [[reference-index]]
+- [[structural-map-checker]]
 - [[vault-description-reader]]

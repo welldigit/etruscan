@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "etruscan": {
+      "type": "stdio",
+      "command": "php",
+      "args": ["${CLAUDE_PROJECT_DIR}/artisan", "etruscan:mcp"]
+    }
+  }
+}

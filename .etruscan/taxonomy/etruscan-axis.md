@@ -14,12 +14,6 @@ Abstract base for grouping axes. Subclass it (`final readonly`, with its own `#[
 to add a dimension — no registration needed. The frontmatter key is the short name, lowercased,
 minus the leading `Etruscan` (EtruscanTeam => team), and must not shadow an identity key.
 
-## References
-
-- [[etruscan-context]]
-- [[etruscan-layer]]
-- [[etruscan-node]]
-
 ## Referenced by
 
 - [[axis-attribute-reader]]

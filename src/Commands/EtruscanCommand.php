@@ -7,18 +7,21 @@ namespace WellDigit\Etruscan\Commands;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
-use WellDigit\Etruscan\Attributes\EtruscanNode;
-use WellDigit\Etruscan\Attributes\Vocabulary\EtruscanContext;
-use WellDigit\Etruscan\Attributes\Vocabulary\EtruscanLayer;
+use Illuminate\Support\Facades\File;
 use WellDigit\Etruscan\Exceptions\AliasCollisionException;
 use WellDigit\Etruscan\Exceptions\InvalidGroupingValueException;
 use WellDigit\Etruscan\Exceptions\ReservedAxisKeyException;
 use WellDigit\Etruscan\Payloads\NoteContent;
 use WellDigit\Etruscan\Services\CodebaseScanner;
+use WellDigit\Etruscan\Services\MapDigestRenderer;
 use WellDigit\Etruscan\Services\NodeGraphBuilder;
 use WellDigit\Etruscan\Services\NotePathResolver;
+use WellDigit\Etruscan\Services\ReferenceIndex;
+use WellDigit\Etruscan\Services\UnresolvedAttributeChecker;
+use WellDigit\Etruscan\Services\VaultReader;
 use WellDigit\Etruscan\Services\VaultWriter;
 use WellDigit\Etruscan\Utilities\AxisKeyParser;
+use WellDigit\Etruscan\Utilities\DigestPathResolver;
 use WellDigit\Etruscan\Utilities\EtruscanConfig;
 use WellDigit\Etruscan\Utilities\TargetFolderCounter;
 
@@ -28,15 +31,19 @@ use WellDigit\Etruscan\Utilities\TargetFolderCounter;
         {--group-by= : Override the grouping axis key(s), comma-separated for nested folders (use "none" to force a flat vault)}
         {--purge : Delete orphaned generated notes even when they carry human words (a description or manual notes)}
         {--dry-run : Report what would be generated without writing}')]
-#[EtruscanNode('etruscan-generate')]
-#[EtruscanLayer('command')]
-#[EtruscanContext('cli')]
+#[\EtruscanNode('etruscan-generate')]
+#[\EtruscanLayer('command')]
+#[\EtruscanContext('cli')]
 final class EtruscanCommand extends Command
 {
     public function handle(
         CodebaseScanner $codebaseScanner,
         NodeGraphBuilder $nodeGraphBuilder,
         VaultWriter $vaultWriter,
+        ReferenceIndex $referenceIndex,
+        UnresolvedAttributeChecker $unresolvedAttributeChecker,
+        VaultReader $vaultReader,
+        MapDigestRenderer $mapDigestRenderer,
     ): int {
         $scannedFolders = EtruscanConfig::scannedFolders();
 
@@ -61,6 +68,20 @@ final class EtruscanCommand extends Command
         $this->info('Scanning for attributed classes ...');
 
         $scannedClasses = $codebaseScanner($scannedFolders);
+
+        foreach ($codebaseScanner->issues as $issue) {
+            $this->warn($issue);
+        }
+
+        foreach ($unresolvedAttributeChecker($scannedClasses) as $finding) {
+            $this->warn($finding->message);
+        }
+
+        if (array_any($codebaseScanner->issues, static fn (string $issue): bool => str_starts_with($issue, 'Unparseable file:'))) {
+            $this->error('Generation stopped before writing: fix unparseable inputs to avoid deleting valid map data.');
+
+            return self::FAILURE;
+        }
 
         try {
             $notes = $nodeGraphBuilder($scannedClasses);
@@ -105,6 +126,15 @@ final class EtruscanCommand extends Command
             return self::FAILURE;
         }
 
+        $referenceIndex->write(
+            $vaultPath,
+            $scannedClasses,
+            $scannedFolders,
+            $codebaseScanner->sourceHashes,
+            $codebaseScanner->issues,
+            $summary['orphaned'],
+        );
+
         $this->info(sprintf(
             'Projected %d node(s) into %s: %d written, %d stale note(s) removed',
             count($notes),
@@ -112,6 +142,22 @@ final class EtruscanCommand extends Command
             $summary['written'],
             $summary['removed'],
         ));
+
+        // The exported index is the one file meant to be committed and imported
+        // into CLAUDE.md; left alone it silently falls behind every regeneration.
+        // Only an existing export at the default path is refreshed — generation
+        // never creates one, and a custom --output path is not tracked.
+        $digestPath = DigestPathResolver::resolve($vaultPath);
+
+        if (File::isFile($digestPath)) {
+            File::replace($digestPath, $mapDigestRenderer(
+                $vaultReader($vaultPath, $markerKey),
+                EtruscanConfig::exportAxis(),
+                $markerKey,
+            ), 0666 & ~umask());
+
+            $this->info('Refreshed the exported index '.DigestPathResolver::FILE_NAME);
+        }
 
         if ($summary['orphaned'] !== []) {
             $this->warn(sprintf(
