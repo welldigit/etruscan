@@ -34,14 +34,14 @@
         "php": "^8.4",
         "illuminate/console": "^13.0",
         "illuminate/support": "^13.0",
-        "laravel/mcp": "^0.9",
+        "laravel/mcp": "^0.9|^1.0",
         "nikic/php-parser": "^5.7",
         "spatie/laravel-package-tools": "^1.16",
         "symfony/finder": "^7.2|^8.0"
     },
     "require-dev": {
         "larastan/larastan": "^3.0",
-        "laravel/boost": "^2.5",
+        "laravel/boost": "^2.10",
         "laravel/pint": "^1.20",
         "orchestra/testbench": "^11.0",
         "pestphp/pest": "^4.7",
